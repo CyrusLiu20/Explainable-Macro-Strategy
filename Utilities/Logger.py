@@ -1,5 +1,6 @@
 import logging
 import sys
+import os
 from colorama import Fore, Style, init
 
 # Initialize colorama (auto-reset for Windows support)
@@ -34,6 +35,12 @@ def scraper_logger(name, log_file, level=logging.DEBUG):
     # Prevent duplicate log entries if multiple instances are created
     if logger.hasHandlers():
         return logger
+
+    
+    log_directory = os.path.dirname(log_file)
+    if not os.path.exists(log_directory):
+        os.makedirs(log_directory)
+        logger.debug(f"Directory '{log_directory}' created.")
 
     # File handler (plain text logs)
     file_handler = logging.FileHandler(log_file)

@@ -1,0 +1,2 @@
+fredapi==0.5.2
+pandas==2.2.3
