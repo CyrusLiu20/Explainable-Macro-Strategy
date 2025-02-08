@@ -64,7 +64,7 @@ class FredDataScraper:
         :param file_name: The name of the file to save.
         """
         try:
-            df.to_csv(folder_path+file_name)
+            df.to_csv(folder_path+file_name,index=True)
             self.logger.info(f"Data saved successfully to {folder_path+file_name}.")
         except Exception as e:
             self.logger.error(f"Error saving {folder_path+file_name}: {e}")

@@ -64,7 +64,7 @@ class CensusDataScraper:
                 data = response.json()
                 df = pd.DataFrame(data[1:], columns=data[0])
                 output_path = os.path.join(folder_path, file_name)
-                df.to_csv(output_path, index=False)
+                df.to_csv(output_path, index=True)
                 self.logger.info(f"Data saved successfully to {output_path}")
             except Exception as e:
                 self.logger.error(f"Failed to process response JSON for {file_name}: {e}")

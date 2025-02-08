@@ -1,5 +1,7 @@
 from DataPipeline.CensusScraper import CensusDataScraper
 from DataPipeline.FredScraper import FredDataScraper
+from DataPipeline.AlphaVantageScraper import AlphaVantageScraper
+
 
 if __name__ == "__main__":
 
@@ -15,4 +17,9 @@ if __name__ == "__main__":
     fred_scraper = FredDataScraper(config_file="DataPipeline/Config/fred_config.json",
                                    log_file="DataPipeline/LogFiles/fred_scraper.log")
     fred_scraper.scrape_and_save_all(folder_path)
+
+    # Alpha Vantage Data Scraper for Fiscal and Monetary News
+    alphavantage_scraper = AlphaVantageScraper(config_file="DataPipeline/Config/alphavantage_config.json",
+                                               log_file="DataPipeline/LogFiles/alphavantage_scraper.log")
+    alphavantage_scraper.scrape_and_save_all(folder_path)
 
