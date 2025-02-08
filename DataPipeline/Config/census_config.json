@@ -1,0 +1,14 @@
+[
+    {
+        "url": "https://api.census.gov/data/timeseries/eits/marts",
+        "file_name": "advance_retail_sales_retail_trade_and_food_services_monthly.csv",
+        "get": "data_type_code,seasonally_adj,category_code,cell_value,error_data,time_slot_name",
+        "geo_level": "us:*"
+    },
+    {
+        "url": "http://api.census.gov/data/timeseries/poverty/histpov2",
+        "file_name": "poverty_status.csv",
+        "get":   "PCTFEMHHPOV,PCTPOV,PCTFAMPOV,FAMPOV,POP,GEO_ID,UNRELPOV,GEOCOMP,SUMLEVEL,NATION,UNREL,FAM,FEMHH,PCTUNRELPOV,FEMHHPOV,YEAR,FOOTNOTES,POV,RACE",
+        "geo_level": "us:*"
+    }
+]

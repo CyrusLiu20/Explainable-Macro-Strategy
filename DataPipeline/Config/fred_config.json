@@ -1,0 +1,26 @@
+[
+    {
+        "series_id": "SP500",
+        "start_date": "2000-01-01",
+        "end_date": "2024-12-31",
+        "file_name": "SP500.csv"
+    },
+    {
+        "series_id": "GDP",
+        "start_date": "2000-01-01",
+        "end_date": "2024-12-31",
+        "file_name": "US_GDP.csv"
+    },
+    {
+        "series_id": "CPIAUCSL",
+        "start_date": "2000-01-01",
+        "end_date": "2024-12-31",
+        "file_name": "US_Urban_CPI.csv"
+    },
+    {
+        "series_id": "UNRATE",
+        "start_date": "2000-01-01",
+        "end_date": "2024-12-31",
+        "file_name": "US_Unemployment_Rate.csv"
+    }
+]
