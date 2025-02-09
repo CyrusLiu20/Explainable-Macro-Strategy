@@ -86,7 +86,8 @@ class AlphaVantageScraper:
             time_from = topic["time_from"]
             time_to = topic["time_to"]
             file_name = topic["file_name"]
+            limit = topic["limit"]
 
-            df = self.fetch_news_sentiment(topic_name, time_from, time_to)
+            df = self.fetch_news_sentiment(topic_name, time_from, time_to, limit=limit)
             if not df.empty:
                 self.save_to_csv(df, folder_path, file_name)

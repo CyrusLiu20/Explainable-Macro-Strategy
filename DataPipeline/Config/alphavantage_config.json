@@ -3,19 +3,22 @@
       "topic": "economy_fiscal",
       "time_from": "20100101T0130",
       "time_to": "20241231T0130",
-      "file_name": "economy_fiscal_sentiment.csv"
+      "file_name": "economy_fiscal_sentiment.csv",
+      "limit": 50
     },
     {
       "topic": "economy_monetary",
       "time_from": "20100101T0130",
       "time_to": "20241231T0130",
-      "file_name": "economy_monetary_sentiment.csv"
+      "file_name": "economy_monetary_sentiment.csv",
+      "limit": 50
     },
     {
       "topic": "economy_macro",
       "time_from": "20100101T0130",
       "time_to": "20241231T0130",
-      "file_name": "economy_macro_sentiment.csv"
+      "file_name": "economy_macro_sentiment.csv",
+      "limit": 50
     }
   ]
   

@@ -1,6 +1,7 @@
 # LLMStrategy Data Pipeline
 
 (Currently only Data Pipeline available, stay tuned for future updates)
+Note: PromtCoder is developed by dhh1995 to streamline and modularise the creation of LLM Prompts.
 
 ## Start using this repository
 
