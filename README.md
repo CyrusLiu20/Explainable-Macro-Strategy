@@ -8,7 +8,7 @@ Stay tuned for future updates!
 
 ---
 
-# Tutorials (Getting Started)
+# Developer Tutorials (Getting Started)
 
 - **Using the API for Data**: In `DataPipeLine/API Tutorial.ipynb`, you'll find the basic coding structure along with example usage on how to fetch data from the US Census Bureau, FRED Economic Data, and the Alpha Vantage Portal.
 
