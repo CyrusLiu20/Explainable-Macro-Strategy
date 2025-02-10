@@ -1,7 +1,7 @@
 # LLMStrategy Data Pipeline
 
 (Currently only Data Pipeline available, stay tuned for future updates)
-Note: PromtCoder is developed by Honghua Dong and Yangjun Ruan to streamline and modularise the creation of LLM Prompts.
+Note: PromtCoder is developed by dhh1995 to streamline and modularise the creation of LLM Prompts.
 
 ## Start using this repository
 
@@ -21,6 +21,13 @@ pip3 install -r requirement.txt
 ### 3. Run the scraper
 ```bash
 python CombinedScraper.py
+```
+
+### 4. Install the PromptCoder Package
+```bash
+cd PromptCoder
+pip install -e .
+cd ..
 ```
 
 Stay tuned for future updates!
