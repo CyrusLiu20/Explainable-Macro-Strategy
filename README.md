@@ -32,9 +32,6 @@ conda activate LLMStrategy
 pip3 install -r requirement.txt
 ```
 
-Here's the corrected `README.md` section in one block:
-
-
 ### 3. Set up API Keys and Run the Scraper
 
 You need to register for free API keys from the following sources:
