@@ -32,9 +32,37 @@ conda activate LLMStrategy
 pip3 install -r requirement.txt
 ```
 
-### 3. Run the scraper
+Here's the corrected `README.md` section in one block:
+
+```markdown
+### 3. Set up API Keys and Run the Scraper
+
+You need to register for free API keys from the following sources:
+
+- [US Census Bureau](https://api.census.gov/data/key_signup.html)  
+- [FRED (Federal Reserve Economic Data)](https://fred.stlouisfed.org/docs/api/api_key.html)  
+- [Alpha Vantage](https://www.alphavantage.co/support/#api-key)  
+
+Once you have your API keys, set them as environment variables:
+
+#### macOS/Linux:
+```bash
+export CENSUS_API_KEY='YOUR_CENSUS_API_KEY'
+export FRED_API_KEY='YOUR_FRED_API_KEY'
+export ALPHAVANTAGE_API_KEY='YOUR_ALPHAVANTAGE_API_KEY'
+```
+
+#### Windows (Command Prompt):
+```cmd
+set CENSUS_API_KEY=YOUR_CENSUS_API_KEY
+set FRED_API_KEY=YOUR_FRED_API_KEY
+set ALPHAVANTAGE_API_KEY=YOUR_ALPHAVANTAGE_API_KEY
+```
+
+Now, run the scraper:
 ```bash
 python CombinedScraper.py
+```
 ```
 
 ### 4. Install the PromptCoder Package
