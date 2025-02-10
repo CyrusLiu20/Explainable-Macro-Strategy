@@ -14,6 +14,8 @@ Stay tuned for future updates!
 
 - **Using Procoder for Formatting LLM Prompts**: In `Prompt/Prompt Tutorial.ipynb`, you'll find the essential coding structure and example usage for dynamically formatting LLM prompts.
 
+- **Current Trends in LLMs for Quantitative Trading**: For an updated understanding of the latest advancements in using LLMs to generate explainable alpha signals, please refer to the `ReferencePapers` folder.
+
 ---
 
 
