@@ -1,7 +1,21 @@
 # LLMStrategy Data Pipeline
 
-(Currently only Data Pipeline available, stay tuned for future updates)
+(Currently only data pipeline and prompt specification available (Just the Framework), stay tuned for future updates)
 Note: PromtCoder is developed by dhh1995 to streamline and modularise the creation of LLM Prompts.
+<br>
+<br>
+Stay tuned for future updates!
+
+---
+
+# Tutorials (Getting Started)
+
+- **Using the API for Data**: In `DataPipeLine/API Tutorial.ipynb`, you'll find the basic coding structure along with example usage on how to fetch data from the US Census Bureau, FRED Economic Data, and the Alpha Vantage Portal.
+
+- **Using Procoder for Formatting LLM Prompts**: In `Prompt/Prompt Tutorial.ipynb`, you'll find the essential coding structure and example usage for dynamically formatting LLM prompts.
+
+---
+
 
 ## Start using this repository
 
@@ -29,6 +43,5 @@ cd PromptCoder
 pip install -e .
 cd ..
 ```
-
-Stay tuned for future updates!
+---
 
