@@ -3,4 +3,6 @@ DataPipeline/LogFiles/
 DataPipeline/Data/
 DataPipeline/__pycache__/
 Utilities/__pycache__/
+Prompt/__pycache__/
 test.ipynb
+test.py
