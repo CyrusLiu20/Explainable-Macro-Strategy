@@ -34,7 +34,7 @@ pip3 install -r requirement.txt
 
 Here's the corrected `README.md` section in one block:
 
-```markdown
+
 ### 3. Set up API Keys and Run the Scraper
 
 You need to register for free API keys from the following sources:
@@ -54,16 +54,16 @@ export ALPHAVANTAGE_API_KEY='YOUR_ALPHAVANTAGE_API_KEY'
 
 #### Windows (Command Prompt):
 ```cmd
-set CENSUS_API_KEY=YOUR_CENSUS_API_KEY
-set FRED_API_KEY=YOUR_FRED_API_KEY
-set ALPHAVANTAGE_API_KEY=YOUR_ALPHAVANTAGE_API_KEY
+set CENSUS_API_KEY='YOUR_CENSUS_API_KEY'
+set FRED_API_KEY='YOUR_FRED_API_KEY'
+set ALPHAVANTAGE_API_KEY='YOUR_ALPHAVANTAGE_API_KEY'
 ```
 
 Now, run the scraper:
 ```bash
 python CombinedScraper.py
 ```
-```
+
 
 ### 4. Install the PromptCoder Package
 ```bash
