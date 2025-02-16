@@ -1,8 +1,11 @@
 Archive/
+TransformerModels/
 DataPipeline/LogFiles/
 DataPipeline/Data/
 DataPipeline/__pycache__/
 Utilities/__pycache__/
 Prompt/__pycache__/
+TransformerModels/
+DownloadTransformer.log
 test.ipynb
 test.py

@@ -2,3 +2,7 @@ fredapi==0.5.2
 pandas==2.2.3
 alpha-vantage==3.0.0
 colorama==0.4.4
+transformers==4.48.3
+ctransformers==0.2.27
+torch==2.2.2
+tensorflow==2.16.2

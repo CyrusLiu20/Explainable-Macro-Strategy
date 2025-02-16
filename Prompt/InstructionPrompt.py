@@ -84,6 +84,7 @@ EXAMPLE_DECISION_PROMPT = NamedBlock(
     content="""
         ```
         Prediction: [Bullish]
+        
         Explanation: The US GDP growth remains strong, inflation is declining, 
         and the Federal Reserve has signaled potential interest rate cuts. 
         This is likely to create a favorable market environment.
