@@ -13,6 +13,8 @@ RESET="\033[0m"
 
 # ===== List of Model Names =====
 models=(
+  "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+  # "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
   # "mistralai/Mistral-7B-Instruct-v0.1"
   # "facebook/opt-6.7b"
   # "EleutherAI/gpt-neo-2.7B"
@@ -23,10 +25,10 @@ models=(
   # "mosaicml/mpt-7b"
   # "allenai/tulu-2-7b"
   # "tiiuae/falcon-7b"
-  "distilbert-base-uncased"         # A smaller version of BERT
-  "bert-base-uncased"               # Standard BERT model
-  "albert-base-v2"                  # A lightweight version of BERT
-  "distilroberta-base"              # A distilled version of RoBERTa
+  # "distilbert-base-uncased"
+  # "bert-base-uncased"
+  # "albert-base-v2"
+  # "distilroberta-base"
 )
 
 # ===== Download Function =====
@@ -63,7 +65,7 @@ while getopts ":p:d:h" opt; do
 done
 
 # ===== Login =====
-huggingface-cli login --token $HF_API_KEY
+huggingface-cli login --token $HF_TOKEN
 
 # ===== Setup =====
 mkdir -p "$SAVE_DIR"
@@ -71,7 +73,7 @@ printf "${CYAN}Saving models to: $SAVE_DIR${RESET}\n"
 printf "${CYAN}Using up to $MAX_PARALLEL parallel downloads${RESET}\n"
 
 # ===== Start Parallel Downloads =====
-echo "${CYAN}Downloading models... (Logging to $LOG_FILE)${RESET}"
+printf "${CYAN}Downloading models... (Logging to $LOG_FILE)${RESET}"
 echo "" > "$LOG_FILE"  # Clear previous log file
 
 # Run downloads in parallel
