@@ -3,7 +3,7 @@ import pandas as pd
 from alpha_vantage.alphaintelligence import AlphaIntelligence
 import json
 
-from Utilities.Logger import scraper_logger  # Assuming you have a custom logger utility.
+from Utilities.Logger import logger  # Assuming you have a custom logger utility.
 
 class AlphaVantageScraper:
     def __init__(self, api_key=None, config_file="alpha_vantage_config.json", log_file="alpha_vantage_scraper.log"):
@@ -20,7 +20,7 @@ class AlphaVantageScraper:
         self.name = "Alpha Vantage Scraper"
 
         # Setup logging
-        self.logger = scraper_logger(name=self.name, log_file=log_file)
+        self.logger = logger(name=self.name, log_file=log_file)
 
     def load_config(self):
         """

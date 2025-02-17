@@ -1,8 +1,9 @@
 # LLMStrategy Data Pipeline
 
-(Currently only data pipeline and prompt specification available (Just the Framework), stay tuned for future updates)
-Note: PromtCoder is developed by dhh1995 to streamline and modularise the creation of LLM Prompts.
+At present, only the data pipeline, prompt specification, and LLM Agent are available (just the framework). Stay tuned for future updates. LLM inferencing is powered by Ollama, so feel free to explore Ollama for a variety of available models.
 <br>
+<br>
+Note: PromtCoder is developed by dhh1995 to streamline and modularise the creation of LLM Prompts.
 <br>
 Stay tuned for future updates!
 
@@ -69,6 +70,13 @@ python CombinedScraper.py
 cd PromptCoder
 pip install -e .
 cd ..
+```
+
+### 5. Download LLM Transformer Models from DownloadLLM.sh (MacOS/Linux)
+Feel free to modify the models to download. Windows users can utilize Git Bash terminal or any Linux subsystem.
+```bash
+chmod +x DownloadLLM.sh
+./DownloadLLM.sh -p 6
 ```
 ---
 

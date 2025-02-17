@@ -6,6 +6,8 @@ DataPipeline/__pycache__/
 Utilities/__pycache__/
 LLMAgent/__pycache__/
 TransformerModels/
+Logs/
 DownloadTransformer.log
+OllamaServe.log
 test.ipynb
 test.py

@@ -3,7 +3,7 @@ import json
 import pandas as pd
 from fredapi import Fred
 
-from Utilities.Logger import scraper_logger
+from Utilities.Logger import logger
 
 class FredDataScraper:
     def __init__(self, api_key=None, config_file="fred_config.json", log_file="fred_scraper.log"):
@@ -20,7 +20,7 @@ class FredDataScraper:
         self.name = "Fred Data Scrapper"
 
         # Setup logging
-        self.logger = scraper_logger(name=self.name, log_file=log_file)
+        self.logger = logger(name=self.name, log_file=log_file)
 
     def load_config(self):
         """

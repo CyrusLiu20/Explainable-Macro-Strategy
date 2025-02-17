@@ -83,8 +83,7 @@ EXAMPLE_DECISION_PROMPT = NamedBlock(
     name="Expected Output Format",
     content="""
         ```
-        Prediction: [Bullish]
-        
+        Prediction: Bullish\n
         Explanation: The US GDP growth remains strong, inflation is declining, 
         and the Federal Reserve has signaled potential interest rate cuts. 
         This is likely to create a favorable market environment.
@@ -95,7 +94,7 @@ EXAMPLE_DECISION_PROMPT = NamedBlock(
 
 # Combine all elements into a single prompt
 LLMSTRATEGY_PROMPT = Collection(
-    BACKGROUND_PROMPT,
+    # BACKGROUND_PROMPT,
     MACROECONOMIC_DESCRIPTION_PROMPT,
     MACROECONOMIC_DATASET_PROMPT,
     MACROECONOMIC_NEWS_PROMPT,

@@ -21,7 +21,7 @@ class ColoredFormatter(logging.Formatter):
         log_message = super().format(record)
         return f"{log_color}{log_message}{Style.RESET_ALL}"
 
-def scraper_logger(name, log_file, level=logging.DEBUG):
+def logger(name, log_file, level=logging.DEBUG):
     """
     Sets up a logger to log messages to a file and console with colored output.
     :param name: Name of the logger.

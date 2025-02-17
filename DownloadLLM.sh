@@ -2,8 +2,8 @@
 
 # ===== Configuration =====
 SAVE_DIR="TransformerModels"  # Directory to store models
-LOG_FILE="DownloadTransformer.log"  # Log file to track progress
-MAX_PARALLEL=4                # Default number of parallel downloads
+LOG_FILE="Logs/DownloadTransformer.log"  # Log file to track progress
+MAX_PARALLEL=12                # Default number of parallel downloads
 
 # Colors for Output Formatting
 GREEN="\033[32m"
@@ -11,24 +11,12 @@ RED="\033[31m"
 CYAN="\033[36m"
 RESET="\033[0m"
 
-# ===== List of Model Names =====
+# ===== List of Hugging Face Model Names =====
 models=(
-  "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
-  # "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
-  # "mistralai/Mistral-7B-Instruct-v0.1"
-  # "facebook/opt-6.7b"
-  # "EleutherAI/gpt-neo-2.7B"
-  # "microsoft/Phi-3-mini"
-  # "databricks/dolly-v2-3b"
-  # "google/gemma-2b"
-  # "stabilityai/stablelm-3b-4e1t"
-  # "mosaicml/mpt-7b"
-  # "allenai/tulu-2-7b"
-  # "tiiuae/falcon-7b"
-  # "distilbert-base-uncased"
-  # "bert-base-uncased"
-  # "albert-base-v2"
-  # "distilroberta-base"
+  "deepseek-r1:1.5b"
+  "llama3.2"
+  "qwen:0.5b"
+  "qwen:1.8b"
 )
 
 # ===== Download Function =====
@@ -44,8 +32,9 @@ download_model() {
   RESET="\033[0m"
 
   echo -e "${CYAN}Downloading $model_name...${RESET}"
-  huggingface-cli download "$model_name" --local-dir "$model_dir" --resume >> "$log_file" 2>&1
-  
+  # huggingface-cli download "$model_name" --local-dir "$model_dir" --resume >> "$log_file" 2>&1
+  ollama pull "$model_name" >> "Logs/$log_file" 2>&1
+
   if [[ $? -eq 0 ]]; then
     printf "${GREEN}Successfully downloaded: $model_name${RESET}\n"
   else
@@ -65,12 +54,9 @@ while getopts ":p:d:h" opt; do
 done
 
 # ===== Login =====
-huggingface-cli login --token $HF_TOKEN
-
-# ===== Setup =====
-mkdir -p "$SAVE_DIR"
-printf "${CYAN}Saving models to: $SAVE_DIR${RESET}\n"
-printf "${CYAN}Using up to $MAX_PARALLEL parallel downloads${RESET}\n"
+# huggingface-cli login --token $HF_TOKEN
+ollama serve > OllamaServe.log 2>&1 &
+printf "${CYAN}Running ollama serve in the background${RESET} (Using up to $MAX_PARALLEL parallel downloads)\n"
 
 # ===== Start Parallel Downloads =====
 printf "${CYAN}Downloading models... (Logging to $LOG_FILE)${RESET}"
@@ -79,4 +65,6 @@ echo "" > "$LOG_FILE"  # Clear previous log file
 # Run downloads in parallel
 export -f download_model
 echo "${models[@]}" | xargs -n 1 -P "$MAX_PARALLEL" -I {} bash -c 'download_model "$1" "$2" "$3"' _ {} "$SAVE_DIR" "$LOG_FILE"
-printf "${GREEN}All downloads complete!${RESET}"
+pkill ollama
+printf "${GREEN}All downloads complete!${RESET}\n"
+printf "${CYAN}Terminate ollama serve in the background${RESET}"

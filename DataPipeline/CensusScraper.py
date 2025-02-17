@@ -2,7 +2,7 @@ import os
 import requests
 import pandas as pd
 import json
-from Utilities.Logger import scraper_logger  # Import the custom logger
+from Utilities.Logger import logger  # Import the custom logger
 
 class CensusDataScraper:
     def __init__(self, api_key=None, config_file="datasets_config.json", log_file="census_scraper.log"):
@@ -12,7 +12,7 @@ class CensusDataScraper:
         :param config_file: Path to the JSON configuration file for datasets.
         :param log_file: Path to the log file.
         """
-        self.logger = scraper_logger("CensusDataScraper", log_file)  # Initialize logger
+        self.logger = logger("CensusDataScraper", log_file)  # Initialize logger
         self.api_key = api_key or os.getenv('CENSUS_API_KEY')
         self.config_file = config_file
         self.datasets = self.load_datasets_config()
