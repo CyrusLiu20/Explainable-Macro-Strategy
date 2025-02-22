@@ -1,24 +1,23 @@
 [
-    {
-      "topic": "economy_fiscal",
-      "time_from": "20100101T0130",
-      "time_to": "20241231T0130",
-      "file_name": "economy_fiscal_sentiment.csv",
-      "limit": 50
-    },
-    {
-      "topic": "economy_monetary",
-      "time_from": "20100101T0130",
-      "time_to": "20241231T0130",
-      "file_name": "economy_monetary_sentiment.csv",
-      "limit": 50
-    },
-    {
-      "topic": "economy_macro",
-      "time_from": "20100101T0130",
-      "time_to": "20241231T0130",
-      "file_name": "economy_macro_sentiment.csv",
-      "limit": 50
-    }
-  ]
-  
+  {
+    "topic": "economy_fiscal",
+    "time_from": "20240529T0130",
+    "time_to": "20240827T0130",
+    "file_name": "fiscal_20240529T0130_20240827T0130.csv",
+    "limit": 1000
+  },
+  {
+    "topic": "economy_fiscal",
+    "time_from": "20240827T0130",
+    "time_to": "20241125T0130",
+    "file_name": "fiscal_20240827T0130_20241125T0130.csv",
+    "limit": 1000
+  },
+  {
+    "topic": "economy_fiscal",
+    "time_from": "20241125T0130",
+    "time_to": "20250220T0130",
+    "file_name": "fiscal_20241125T0130_20250220T0130.csv",
+    "limit": 1000
+  }
+]

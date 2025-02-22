@@ -1,13 +1,21 @@
+# Directories to ignore
 Archive/
 TransformerModels/
 DataPipeline/LogFiles/
 DataPipeline/Data/
-DataPipeline/__pycache__/
-Utilities/__pycache__/
-LLMAgent/__pycache__/
-TransformerModels/
 Logs/
+
+# Python cache directories
+*/__pycache__/
+*.pyc
+
+# Specific log files
 DownloadTransformer.log
 OllamaServe.log
+
+# Ignore test files
 test.ipynb
 test.py
+
+# macOS specific file to ignore
+*.DS_Store
