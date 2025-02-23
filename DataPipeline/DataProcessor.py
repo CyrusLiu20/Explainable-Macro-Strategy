@@ -51,13 +51,35 @@ class DataProcessor:
             (pd.read_csv(os.path.join(self.folder_path, file)) for file in csv_files),
             ignore_index=True
         )
+    
+    def read_and_concatenate_csvs_horizontally(self, csv_files, merge_on="Date"):
+        """Read and concatenate CSV files horizontally (merge on a common column)."""
+        self.log.info(f"Found {len(csv_files)} CSV files for horizontal merging.")
+        
+        dfs = [pd.read_csv(os.path.join(self.folder_path, file)) for file in csv_files]
+        
+        if not dfs:
+            self.log.warning("No CSV files loaded for horizontal merging.")
+            return None
+
+        # Merge all DataFrames on the specified column
+        merged_df = dfs[0]
+        for df in dfs[1:]:
+            merged_df = merged_df.merge(df, on=merge_on, how="outer", suffixes=("", "_dup"))
+        
+        # Log any duplicate column names after merging
+        duplicate_cols = [col for col in merged_df.columns if col.endswith("_dup")]
+        if duplicate_cols:
+            self.log.warning(f"Duplicate columns detected after merging: {duplicate_cols}")
+
+        return merged_df
+
 
     def remove_duplicates(self, df):
         """Remove duplicate rows and log the count."""
         initial_count = len(df)
         df.drop_duplicates(inplace=True)
         duplicates_removed = initial_count - len(df)
-        self.log.info(f"Total records after removing duplicates: {len(df)}")
         self.log.info(f"Number of duplicate entries removed: {duplicates_removed}")
         return df
 
@@ -75,12 +97,17 @@ class DataProcessor:
         if self.columns_to_keep:
             df = df[self.columns_to_keep]
         df = df.rename(columns=self.rename_columns)
+        df.columns = df.columns.str.capitalize() # Capitalise First Letter of all column names
         return df
 
     def find_missing_date_ranges(self, df):
+
+        if self.rename_columns is not None:
+            return
+
         """Identify missing date periods in the dataset."""
-        if self.date_column and self.date_column in df.columns:
-            df["date_only"] = df[self.date_column].dt.date  # Extract only the date
+        if self.rename_columns[next(iter(self.rename_columns))] in df.columns:
+            df["date_only"] = df[self.rename_columns[next(iter(self.rename_columns))]].dt.date  # Extract only the date
             min_date = df["date_only"].min()
             max_date = df["date_only"].max()
             full_date_range = pd.date_range(start=min_date, end=max_date, freq="D").date
@@ -113,18 +140,3 @@ class DataProcessor:
         df.to_csv(output_file_path, index=False)
         self.log.info(f"Processed data saved to {output_file_path}")
 
-    def process_data(self, file_name, prefix=""):
-        """General pipeline to process data."""
-        csv_files = self.get_csv_files(prefix=prefix)
-        if not csv_files:
-            return
-        
-        df = self.read_and_concatenate_csvs(csv_files)
-        self.log.info(f"Total records before removing duplicates: {len(df)}")
-        df = self.remove_duplicates(df)
-        df = self.handle_missing_dates(df)
-        df = self.process_columns(df)
-        self.save_processed_data(df, filename=f"{file_name}_processed.csv")
-        self.find_missing_date_ranges(df)
-        
-        return df

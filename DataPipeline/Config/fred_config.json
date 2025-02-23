@@ -4,195 +4,195 @@
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Daily",
-        "file_name": "inidicator_SP500.csv"
+        "file_name": "indicator_SP500.csv"
     },
     {
         "series_id": "GDP",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Quarterly",
-        "file_name": "inidicator_US_GDP.csv"
+        "file_name": "indicator_US_GDP.csv"
     },
     {
         "series_id": "CPIAUCSL",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_US_Urban_CPI.csv"
+        "file_name": "indicator_US_Urban_CPI.csv"
     },
     {
         "series_id": "UNRATE",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_US_Unemployment_Rate.csv"
+        "file_name": "indicator_US_Unemployment_Rate.csv"
     },
     {
         "series_id": "MICH",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Michigan_Inflation_Expectation.csv"
+        "file_name": "indicator_Michigan_Inflation_Expectation.csv"
     },
     {
         "series_id": "BOPGSTB",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Trade_Balance_GS.csv"
+        "file_name": "indicator_Trade_Balance_GS.csv"
     },
     {
         "series_id": "WHLSLRIMSA",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Merchant_Wholesalers_Inventory.csv"
+        "file_name": "indicator_Merchant_Wholesalers_Inventory.csv"
     },
     {
         "series_id": "RSXFS",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Advanced_Retail_Sales.csv"
+        "file_name": "indicator_Advanced_Retail_Sales.csv"
     },
     {
         "series_id": "BUSINV",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Total_Business_Inventories.csv"
+        "file_name": "indicator_Total_Business_Inventories.csv"
     },
     {
         "series_id": "TCU",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Capacity_Utilization.csv"
+        "file_name": "indicator_Capacity_Utilization.csv"
     },
     {
         "series_id": "UMCSENT",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_UoM_Consumer_Sentiment.csv"
+        "file_name": "indicator_UoM_Consumer_Sentiment.csv"
     },
     {
         "series_id": "DAUTOSAAR",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Domestic_Vehicle_Sales.csv"
+        "file_name": "indicator_Domestic_Vehicle_Sales.csv"
     },
     {
         "series_id": "DGORDER",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Durable_Goods_Order.csv"
+        "file_name": "indicator_Durable_Goods_Order.csv"
     },
     {
         "series_id": "IR",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Import_Price_Index.csv"
+        "file_name": "indicator_Import_Price_Index.csv"
     },
     {
         "series_id": "ICSA",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Weekly",
-        "file_name": "inidicator_Initial_Jobless_Claims.csv"
+        "file_name": "indicator_Initial_Jobless_Claims.csv"
     },
     {
         "series_id": "PAYEMS",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Total_Nonfarm_Payrolls.csv"
+        "file_name": "indicator_Total_Nonfarm_Payrolls.csv"
     },
     {
         "series_id": "FEDFUNDS",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_Federal_Funds_Rates.csv"
+        "file_name": "indicator_Federal_Funds_Rates.csv"
     },
     {
         "series_id": "DGS10",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Daily",
-        "file_name": "inidicator_10Y_Treasury_Yield.csv"
+        "file_name": "indicator_10Y_Treasury_Yield.csv"
     },
     {
         "series_id": "DGS5",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Daily",
-        "file_name": "inidicator_5Y_Treasury_Yield.csv"
+        "file_name": "indicator_5Y_Treasury_Yield.csv"
     },
     {
         "series_id": "DGS2",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Daily",
-        "file_name": "inidicator_2Y_Treasury_Yield.csv"
+        "file_name": "indicator_2Y_Treasury_Yield.csv"
     },
     {
         "series_id": "DGS30",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Daily",
-        "file_name": "inidicator_30Y_Treasury_Yield.csv"
+        "file_name": "indicator_30Y_Treasury_Yield.csv"
     },
     {
         "series_id": "A939RX0Q048SBEA",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Quarterly",
-        "file_name": "inidicator_Real_GDP_Per_Capita.csv"
+        "file_name": "indicator_Real_GDP_Per_Capita.csv"
     },
     {
         "series_id": "GDPC1",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Quarterly",
-        "file_name": "inidicator_Real_GDP.csv"
+        "file_name": "indicator_Real_GDP.csv"
     },
     {
         "series_id": "PPIACO",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_PPI.csv"
+        "file_name": "indicator_PPI.csv"
     },
     {
         "series_id": "HNFSEPUSSA",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Monthly",
-        "file_name": "inidicator_New_One_Family_Home_Sale.csv"
+        "file_name": "indicator_New_One_Family_Home_Sale.csv"
     },
     {
         "series_id": "DEXUSEU",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Daily",
-        "file_name": "inidicator_USD_To_EURO.csv"
+        "file_name": "indicator_USD_To_EURO.csv"
     },
     {
         "series_id": "DEXJPUS",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Daily",
-        "file_name": "inidicator_USD_To_YEN.csv"
+        "file_name": "indicator_USD_To_YEN.csv"
     },
     {
         "series_id": "DEXUSUK",
         "start_date": "2022-01-01",
         "end_date": "2025-02-20",
         "frequency": "Daily",
-        "file_name": "inidicator_USD_To_GBP.csv"
+        "file_name": "indicator_USD_To_GBP.csv"
     }
 ]

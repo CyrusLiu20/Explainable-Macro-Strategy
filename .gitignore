@@ -2,12 +2,14 @@
 Archive/
 TransformerModels/
 DataPipeline/LogFiles/
-DataPipeline/Data/
 Logs/
 
 # Python cache directories
 */__pycache__/
 *.pyc
+
+# CSV files
+*.csv
 
 # Log files
 DownloadTransformer.log
