@@ -5,23 +5,48 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from Utilities.Logger import logger
 
-class FiscalDataProcessor:
-    def __init__(self, folder_path, output_folder_path, log_file):
+class DataProcessor:
+    def __init__(self, folder_path, output_folder_path, log_file, 
+                 date_column=None, date_format=None, columns_to_keep=None, rename_columns=None):
+        """
+        General data processor.
+
+        Parameters:
+        - folder_path: Path to input CSVs
+        - output_folder_path: Path to save processed data
+        - log_file: Log file path
+        - date_column: Name of the datetime column (if applicable)
+        - date_format: Expected format for datetime parsing
+        - columns_to_keep: List of columns to retain
+        - rename_columns: Dictionary for renaming columns {old_name: new_name}
+        """
         self.folder_path = folder_path
         self.output_folder_path = output_folder_path
         self.log_file = log_file
-        self.log = logger("FiscalDataProcessor", log_file)
-    
-    def get_fiscal_files(self):
-        """Retrieve all fiscal CSV files from the given folder."""
-        csv_files = [f for f in os.listdir(self.folder_path) if f.startswith("fiscal") and f.endswith(".csv")]
+        self.date_column = date_column
+        self.date_format = date_format
+        self.columns_to_keep = columns_to_keep
+        self.rename_columns = rename_columns or {}
+        self.log = logger(self.__class__.__name__, log_file)
+
+    def get_csv_files(self, prefixes=None):
+        """Retrieve all CSV files, optionally filtered by a list of prefixes."""
+        if prefixes is None:
+            prefixes = [""]  # Default to all CSVs if no prefixes provided
+
+        csv_files = [
+            f for f in os.listdir(self.folder_path)
+            if f.endswith(".csv") and any(f.startswith(prefix) for prefix in prefixes)
+        ]
+
         if not csv_files:
-            self.log.warning("No fiscal CSV files found in the directory.")
+            self.log.warning(f"No CSV files found in {self.folder_path} with prefixes {prefixes}.")
+
         return csv_files
 
     def read_and_concatenate_csvs(self, csv_files):
-        """Read and concatenate all fiscal CSV files into one DataFrame."""
-        self.log.info(f"Found {len(csv_files)} fiscal CSV files.")
+        """Read and concatenate CSV files."""
+        self.log.info(f"Found {len(csv_files)} CSV files.")
         return pd.concat(
             (pd.read_csv(os.path.join(self.folder_path, file)) for file in csv_files),
             ignore_index=True
@@ -37,50 +62,69 @@ class FiscalDataProcessor:
         return df
 
     def handle_missing_dates(self, df):
-        """Convert 'time_published' to datetime and handle missing dates."""
-        df["time_published"] = pd.to_datetime(df["time_published"], format="%Y%m%dT%H%M%S", errors="coerce")
-        missing_dates = df["time_published"].isna().sum()
-        if missing_dates > 0:
-            self.log.warning(f"Number of entries with missing or unparseable dates: {missing_dates}")
+        """Convert the specified column to datetime and handle missing dates."""
+        if self.date_column and self.date_column in df.columns:
+            df[self.date_column] = pd.to_datetime(df[self.date_column], format=self.date_format, errors="coerce")
+            missing_dates = df[self.date_column].isna().sum()
+            if missing_dates > 0:
+                self.log.warning(f"Number of entries with missing or unparseable dates in '{self.date_column}': {missing_dates}")
         return df
 
     def process_columns(self, df):
-        """Select relevant columns and rename 'time_published' to 'date'."""
-        df = df[["time_published", "title", "summary", "source", "topics"]].rename(columns={"time_published": "date"})
+        """Select relevant columns and rename them."""
+        if self.columns_to_keep:
+            df = df[self.columns_to_keep]
+        df = df.rename(columns=self.rename_columns)
         return df
 
-    def save_processed_data(self, df):
-        """Ensure output folder exists and save the processed data to CSV."""
+    def find_missing_date_ranges(self, df):
+        """Identify missing date periods in the dataset."""
+        if self.date_column and self.date_column in df.columns:
+            df["date_only"] = df[self.date_column].dt.date  # Extract only the date
+            min_date = df["date_only"].min()
+            max_date = df["date_only"].max()
+            full_date_range = pd.date_range(start=min_date, end=max_date, freq="D").date
+
+            present_dates = set(df["date_only"])
+            missing_dates = sorted(set(full_date_range) - present_dates)
+
+            if missing_dates:
+                missing_periods = []
+                start_date = missing_dates[0]
+
+                for i in range(1, len(missing_dates)):
+                    if (missing_dates[i] - missing_dates[i - 1]).days > 1:
+                        end_date = missing_dates[i - 1]
+                        missing_periods.append((start_date, end_date))
+                        start_date = missing_dates[i]
+
+                missing_periods.append((start_date, missing_dates[-1]))  # Add last period
+
+                self.log.warning(f"Found {len(missing_periods)} missing date ranges between {min_date} and {max_date}.")
+                for start, end in missing_periods:
+                    self.log.warning(f"Missing period: {start} to {end}")
+            else:
+                self.log.info("No missing date periods found in the dataset.")
+
+    def save_processed_data(self, df, filename="processed_data.csv"):
+        """Save the processed data to CSV."""
         os.makedirs(self.output_folder_path, exist_ok=True)
-        output_file_path = os.path.join(self.output_folder_path, "fiscal_data.csv")
+        output_file_path = os.path.join(self.output_folder_path, filename)
         df.to_csv(output_file_path, index=False)
         self.log.info(f"Processed data saved to {output_file_path}")
-    
-    def process_fiscal_data(self):
-        """Main method to process fiscal data."""
-        csv_files = self.get_fiscal_files()
+
+    def process_data(self, file_name, prefix=""):
+        """General pipeline to process data."""
+        csv_files = self.get_csv_files(prefix=prefix)
         if not csv_files:
             return
         
-        # Read and concatenate the CSV files
         df = self.read_and_concatenate_csvs(csv_files)
-        
-        # Process the DataFrame
         self.log.info(f"Total records before removing duplicates: {len(df)}")
         df = self.remove_duplicates(df)
         df = self.handle_missing_dates(df)
         df = self.process_columns(df)
-        
-        # Save the processed data
-        self.save_processed_data(df)
+        self.save_processed_data(df, filename=f"{file_name}_processed.csv")
+        self.find_missing_date_ranges(df)
         
         return df
-
-# Define file paths
-folder_path = "DataPipeline/Data/MacroNews"
-output_folder_path = "DataPipeline/Data/ProcessedData"
-log_file = "Logs/DataProcessor.log"
-
-# Instantiate and process fiscal data
-processor = FiscalDataProcessor(folder_path, output_folder_path, log_file)
-processed_data = processor.process_fiscal_data()

@@ -64,7 +64,8 @@ class FredDataScraper:
         :param file_name: The name of the file to save.
         """
         try:
-            df.to_csv(folder_path+file_name,index=True)
+            file_path = os.path.join(folder_path,file_name)
+            df.to_csv(file_path,index=True)
             self.logger.info(f"Data saved successfully to {folder_path+file_name}.")
         except Exception as e:
             self.logger.error(f"Error saving {folder_path+file_name}: {e}")
@@ -77,17 +78,19 @@ class FredDataScraper:
             self.logger.error("No series found in configuration file.")
             return
 
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-            self.logger.debug(f"Directory '{folder_path}' created.")
-
-
         for series in self.series_config:
             series_id = series["series_id"]
             start_date = series["start_date"]
             end_date = series["end_date"]
+            frequency = series["frequency"]
             file_name = series["file_name"]
 
             df = self.fetch_series(series_id, start_date, end_date)
             if not df.empty:
-                self.save_to_csv(df, folder_path, file_name)
+
+                folder_frequency_path = os.path.join(folder_path,frequency)
+                if not os.path.exists(folder_frequency_path):
+                    os.makedirs(folder_frequency_path)
+                    self.logger.debug(f"Directory '{folder_frequency_path}' created.")
+
+                self.save_to_csv(df, folder_frequency_path, file_name)

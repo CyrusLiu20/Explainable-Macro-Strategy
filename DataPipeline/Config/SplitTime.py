@@ -22,7 +22,7 @@ def split_time_range(time_from, time_to, months=3):
     
     return periods
 
-def process_config(input_file, output_file, selected_types=None, date_range=None):
+def process_config(input_file, output_file, months=3, selected_types=None, date_range=None):
     """Process the configuration file, filtering by type and date range."""
     if not os.path.exists(input_file):
         log.error(f"Input file {input_file} not found.")
@@ -44,7 +44,7 @@ def process_config(input_file, output_file, selected_types=None, date_range=None
         if date_range:
             time_from, time_to = date_range
         
-        time_splits = split_time_range(time_from, time_to, months=3)
+        time_splits = split_time_range(time_from, time_to, months=months)
         
         for i, (start, end) in enumerate(time_splits):
             new_entry = entry.copy()

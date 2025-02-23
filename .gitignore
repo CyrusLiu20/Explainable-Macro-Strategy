@@ -9,7 +9,7 @@ Logs/
 */__pycache__/
 *.pyc
 
-# Specific log files
+# Log files
 DownloadTransformer.log
 OllamaServe.log
 
