@@ -19,7 +19,7 @@ class NewsDataProcessor(DataProcessor):
             rename_columns={"time_published": "Date"}
         )
 
-        self.prefixes = ["fiscal", "economic", "market"]
+        self.prefixes = ["fiscal", "economic", "macro"]
         self.output_file = "MacroNews"
 
     def process_data(self, prefixes=""):
@@ -27,7 +27,7 @@ class NewsDataProcessor(DataProcessor):
         csv_files = super().get_csv_files(prefixes=self.prefixes)
         if not csv_files:
             return
-        
+
         df = super().read_and_concatenate_csvs(csv_files)
         df = super().remove_duplicates(df)
         df = super().handle_missing_dates(df)
@@ -36,7 +36,7 @@ class NewsDataProcessor(DataProcessor):
         super().find_missing_date_ranges(df)
         
         return df
-    
+
 class IndicatorDataProcessor(DataProcessor):
     def __init__(self, frequency, folder_path, output_folder_path, log_file):
 
@@ -61,7 +61,7 @@ class IndicatorDataProcessor(DataProcessor):
         csv_files = super().get_csv_files(prefixes=self.prefixes)
         if not csv_files:
             return
-        
+
         df = super().read_and_concatenate_csvs_horizontally(csv_files, merge_on=self.date_column)
         df = super().remove_duplicates(df)
         df = df.dropna(subset=df.columns.difference(['date']), how='all')
@@ -71,24 +71,26 @@ class IndicatorDataProcessor(DataProcessor):
         return df
 
 
-# Define file paths
-folder_path = "DataPipeline/Data/MacroNews"
-output_folder_path = "DataPipeline/Data/ProcessedData"
-log_file = "Logs/news_data_processor.log"
 
-# Instantiate and process news data
-news_processor = NewsDataProcessor(folder_path, output_folder_path, log_file)
-processed_data = news_processor.process_data()
+if __name__ == "__main__":
+    # Define file paths
+    folder_path = "DataPipeline/Data/MacroNews"
+    output_folder_path = "DataPipeline/Data/ProcessedData"
+    log_file = "Logs/news_data_processor.log"
+
+    # Instantiate and process news data
+    news_processor = NewsDataProcessor(folder_path, output_folder_path, log_file)
+    processed_data = news_processor.process_data()
 
 
 
-# Define file paths
-folder_path = "DataPipeline/Data/MacroIndicators"
-output_folder_path = "DataPipeline/Data/ProcessedData"
-log_file = "Logs/indicators_data_processor.log"
-frequencies = ["Daily", "Weekly", "Monthly", "Quarterly"]
+    # Define file paths
+    folder_path = "DataPipeline/Data/MacroIndicators"
+    output_folder_path = "DataPipeline/Data/ProcessedData"
+    log_file = "Logs/indicators_data_processor.log"
+    frequencies = ["Daily", "Weekly", "Monthly", "Quarterly"]
 
-for frequency in frequencies:
-    # Instantiate and process indicator data
-    indicator_processor = IndicatorDataProcessor(frequency=frequency, folder_path=folder_path, output_folder_path=output_folder_path, log_file=log_file)
-    processed_data = indicator_processor.process_data()
+    for frequency in frequencies:
+        # Instantiate and process indicator data
+        indicator_processor = IndicatorDataProcessor(frequency=frequency, folder_path=folder_path, output_folder_path=output_folder_path, log_file=log_file)
+        processed_data = indicator_processor.process_data()
