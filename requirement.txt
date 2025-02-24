@@ -8,4 +8,5 @@ torch==2.2.2
 tensorflow==2.16.2
 opencv_python==4.11.0.86
 langchain_huggingface==0.1.2
-ollama=0.4.7
+ollama==0.4.7
+langchain_ollama==0.2.3

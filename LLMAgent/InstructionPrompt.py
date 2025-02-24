@@ -38,6 +38,30 @@ These macroeconomic indicators include:
     """
 )
 
+# Define prompt for LLM to choose relevant news for trading US 10 Year Treasury bonds
+MACROECONOMIC_NEWS_SELECTION_PROMPT = NamedBlock(
+    name="Summarise Macroeconomic News for {asset}",
+    content="""
+Your Task is to review a list news articles each day and identify which headlines and summaries provide relevant information for a macro strategy \
+to trade {asset}. The selected news should be related to global economic conditions, government policies, or major market-moving \
+events that could influence US Treasury yields, particularly the 10-Year Treasury bond. Your output will be fed into another Large Language Model \
+to further infer trading decision.
+
+The model should output:
+1. The selected news headlines and summaries.
+2. A brief explanation of why the news is relevant to US 10-Year Treasury bond trading, rephrased for clarity when necessary.
+
+Factors to consider for relevance:
+- Economic data releases (e.g., inflation, GDP growth, unemployment).
+- Central bank decisions (e.g., Federal Reserve interest rate hikes or cuts).
+- Global geopolitical events that could impact financial markets.
+- Fiscal policies and government spending initiatives in the US.
+- International developments affecting global liquidity or bond yields.
+"""
+)
+
+
+
 # Define dataset dynamically using the generated CSV string
 MACROECONOMIC_DATASET_PROMPT = NamedBlock(
     name="Macroeconomic Data",
@@ -99,7 +123,7 @@ This is likely to create a favorable market environment.
 # Combine all elements into a single prompt
 LLMSTRATEGY_PROMPT = Collection(
     # BACKGROUND_PROMPT,
-    MACROECONOMIC_DESCRIPTION_PROMPT,
+    # MACROECONOMIC_DESCRIPTION_PROMPT,
     MACROECONOMIC_DATASET_PROMPT,
     MACROECONOMIC_NEWS_PROMPT,
     DECISION_PROMPT,
@@ -128,6 +152,7 @@ def format_macro_news(csv_file, filter_dates=None):
 
     # Process each row to extract relevant fields
     news_entries = []
+    df.sort_values(by='Date', ascending=True, inplace=True)
     for _, row in df.iterrows():
         date = row['Date'].strftime('%Y-%m-%d %H:%M:%S')
         title = row['Title']
@@ -141,17 +166,14 @@ def format_macro_news(csv_file, filter_dates=None):
             topic_list = "Unknown Topics"
         
         # Format each news entry
-        entry = f"**{date}** - *{title}* ({source})\n{summary}\n"
+        entry = f"Date: **{date}**\n\
+Title: *{title}* (Source: {source})\n\
+Summary: {summary}\n"
         news_entries.append(entry)
     
     # Join all news entries into a single block
     formatted_news = '\n\n'.join(news_entries)
     return formatted_news
-
-    # input = {"news_entries": formatted_news}
-    # prompt = format_prompt(MACROECONOMIC_NEWS_PROMPT, input)
-    # return prompt
-
 
 def format_macro_indicator(macro_csv, mapping_csv, current_date, last_periods=4):
     # Load macroeconomic data
