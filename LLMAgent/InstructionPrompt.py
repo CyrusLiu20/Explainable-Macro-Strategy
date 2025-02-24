@@ -48,15 +48,9 @@ events that could influence US Treasury yields, particularly the 10-Year Treasur
 to further infer trading decision.
 
 The model should output:
-1. The selected news headlines and summaries.
+1. 5-10 selected news headlines and summaries.
 2. A brief explanation of why the news is relevant to US 10-Year Treasury bond trading, rephrased for clarity when necessary.
 
-Factors to consider for relevance:
-- Economic data releases (e.g., inflation, GDP growth, unemployment).
-- Central bank decisions (e.g., Federal Reserve interest rate hikes or cuts).
-- Global geopolitical events that could impact financial markets.
-- Fiscal policies and government spending initiatives in the US.
-- International developments affecting global liquidity or bond yields.
 """
 )
 
@@ -77,7 +71,7 @@ MACROECONOMIC_NEWS_PROMPT = NamedBlock(
     name="Recent Macroeconomic News",
     content="""
 Below is a summary of recent macroeconomic news articles and key events  
-that may impact financial markets.  
+that may impact financial markets. Please select 5-10 News that is the most impactful for trading {asset}
 
 {news_entries}
     """

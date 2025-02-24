@@ -105,7 +105,7 @@ class TradingAgent(BaseAgent):
 
 
 class SummaryAgent(BaseAgent):
-    def __init__(self, name: str, asset: str, logger_name: str = "SummaryAgent", model: str = "deepseek-r1:1.5b"):
+    def __init__(self, name: str, asset: str, logger_name: str = "SummaryAgent", model: str = "deepseek-r1:1.5b", has_system_prompt: bool = False):
         """
         Superclass of LLMAgent for summarizing and selecting impactful news.
 
@@ -115,29 +115,31 @@ class SummaryAgent(BaseAgent):
         :param model: The LLM model to use (default: "deepseek-r1:1.5b").
         """
         self.asset = asset
+        self.has_system_prompt = has_system_prompt
 
         # Define the expected output format using NamedBlock
         self.EXPECTED_OUTPUT_PROMPT = NamedBlock(
-            name="Expected Output Format",
+            name="Example Output Format (Please select 6 - 10 most relevant news from most important to least important for {asset} and give an overall summary)",
             content="""
             ```
+            **Selected News**\n
             Date: **2022-12-13 17:31:00**
             Title: *Why November U.S. CPI data is seen as a 'game-changer' for financial markets* (Source: MarketWatch)
             Summary: Stocks and bonds rally, along with gold and oil, on Tuesday after November's CPI inflation data rose by less than forecasters expected.
 
-            Date: **2022-12-14 09:45:00**
-            Title: *Federal Reserve signals potential rate cuts amid slowing inflation* (Source: Reuters)
-            Summary: The Federal Reserve has indicated that it may cut interest rates in the coming months as inflation continues to slow.
+            Date: **2022-12-13 13:38:00**
+            Title: *November Inflation Shock: CPI Slides For 5th Straight Month, Stocks Surge* (Source: The Street)
+            Summary: Stocks are on the move Tuesday after Commerce Department data showed a fifth consecutive monthly decline in headline inflation.
 
-            Overall Summary: Recent news have shown the rise in government spending, driving inflation and affecting trade dynamics. Includes S&P 500 drops due to economic uncertainty and health insurance decisions, impacting investor sentiment. The board consistently discusses changes in inflation rates across different economies, affecting investor decisions.
+            **Overall Summary**\n
+            Recent news have shown the rise in government spending, driving inflation and affecting trade dynamics. Includes S&P 500 drops due to economic uncertainty and health insurance decisions, impacting investor sentiment. The board consistently discusses changes in inflation rates across different economies, affecting investor decisions.
             ```
             """
         )
 
         # Combine the system prompt with the expected output format
         self.SYSTEM_PROMPT = Collection(
-            MACROECONOMIC_NEWS_SELECTION_PROMPT,
-            self.EXPECTED_OUTPUT_PROMPT
+            MACROECONOMIC_NEWS_SELECTION_PROMPT
         )
 
         # Format the system message
@@ -161,10 +163,13 @@ class SummaryAgent(BaseAgent):
                  - "summary": A string containing an organized summary of the selected news.
         """
         # Format the input prompt
-        input_prompt = format_prompt(MACROECONOMIC_NEWS_PROMPT, {"news_entries": news_entries})
+        self.INPUT_PROMPT = Collection(MACROECONOMIC_NEWS_PROMPT,
+                                       self.EXPECTED_OUTPUT_PROMPT)
+        input = {"news_entries": news_entries, "asset": self.asset}
+        input_prompt = format_prompt(self.INPUT_PROMPT, input)
 
         # Get raw response from the base class
-        raw_response, status = self.response(input_prompt)
+        raw_response, status = self.response(input_prompt, has_system_prompt=self.has_system_prompt)
 
         if status != "Success":
             self.log.error(f"Failed to get response from LLM: {status}")
