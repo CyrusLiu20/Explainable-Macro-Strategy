@@ -19,7 +19,7 @@ class NewsDataProcessor(DataProcessor):
             rename_columns={"time_published": "Date"}
         )
 
-        self.prefixes = ["fiscal", "economic", "macro"]
+        self.prefixes = ["fiscal", "monetary", "macro"]
         self.output_file = "MacroNews"
 
     def process_data(self, prefixes=""):

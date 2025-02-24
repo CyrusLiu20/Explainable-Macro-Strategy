@@ -30,9 +30,9 @@ def main(scrape: bool, process: bool):
         # Process AlphaVantage config
         input_file = config_root / "alphavantage_config_orig.json"
         output_file = config_root / "alphavantage_config.json"
-        selected_types = ["economy_macro"]
+        selected_types = ["economy_monetary"]
         date_range = ("20220101T0130", "20250220T0130")
-        splittime.process_config(input_file, output_file, selected_types=selected_types, date_range=date_range, months=2)
+        splittime.process_config(input_file, output_file, selected_types=selected_types, date_range=date_range, months=1)
 
         # AlphaVantage Data Scraper
         alphavantage_scraper = AlphaVantageScraper(

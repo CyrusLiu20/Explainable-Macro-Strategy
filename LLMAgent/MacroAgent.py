@@ -118,24 +118,7 @@ class SummaryAgent(BaseAgent):
         self.has_system_prompt = has_system_prompt
 
         # Define the expected output format using NamedBlock
-        self.EXPECTED_OUTPUT_PROMPT = NamedBlock(
-            name="Example Output Format (Please select 6 - 10 most relevant news from most important to least important for {asset} and give an overall summary)",
-            content="""
-            ```
-            **Selected News**\n
-            Date: **2022-12-13 17:31:00**
-            Title: *Why November U.S. CPI data is seen as a 'game-changer' for financial markets* (Source: MarketWatch)
-            Summary: Stocks and bonds rally, along with gold and oil, on Tuesday after November's CPI inflation data rose by less than forecasters expected.
-
-            Date: **2022-12-13 13:38:00**
-            Title: *November Inflation Shock: CPI Slides For 5th Straight Month, Stocks Surge* (Source: The Street)
-            Summary: Stocks are on the move Tuesday after Commerce Department data showed a fifth consecutive monthly decline in headline inflation.
-
-            **Overall Summary**\n
-            Recent news have shown the rise in government spending, driving inflation and affecting trade dynamics. Includes S&P 500 drops due to economic uncertainty and health insurance decisions, impacting investor sentiment. The board consistently discusses changes in inflation rates across different economies, affecting investor decisions.
-            ```
-            """
-        )
+        self.EXPECTED_OUTPUT_PROMPT = EXAMPLE_SUMMARY_PROMPT
 
         # Combine the system prompt with the expected output format
         self.SYSTEM_PROMPT = Collection(

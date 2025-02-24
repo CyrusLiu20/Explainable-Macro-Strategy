@@ -23,6 +23,7 @@ in the trading signals generated.
 )
 
 
+### Deprecated and will be deleted
 # Define macroeconomic indicators description with units
 MACROECONOMIC_DESCRIPTION_PROMPT = NamedBlock(
     name="Macroeconomic Indicator Of Past Six Months",
@@ -37,6 +38,7 @@ These macroeconomic indicators include:
 - **USD/EUR Exchange Rate** (EUR per USD): The value of one US dollar in euros.
     """
 )
+
 
 # Define prompt for LLM to choose relevant news for trading US 10 Year Treasury bonds
 MACROECONOMIC_NEWS_SELECTION_PROMPT = NamedBlock(
@@ -55,7 +57,7 @@ The model should output:
 )
 
 
-
+### Deprecated and will be deleted
 # Define dataset dynamically using the generated CSV string
 MACROECONOMIC_DATASET_PROMPT = NamedBlock(
     name="Macroeconomic Data",
@@ -78,7 +80,7 @@ that may impact financial markets. Please select 5-10 News that is the most impa
 )
 
 
-from procoder.prompt import NamedBlock
+
 
 DECISION_PROMPT = NamedBlock(
     name="Decision (Forecast Trend)",
@@ -114,6 +116,25 @@ This is likely to create a favorable market environment.
 )
 
 
+EXAMPLE_SUMMARY_PROMPT = NamedBlock(
+            name="Example Output Format (Please select the most relevant news from most important to least important for {asset} and give an overall summary)",
+            content="""
+            ```
+            Date: **Date1**
+            Title: *Title 1* (Source: Source1)
+            Summary: Summary1
+
+            Date: **Date2**
+            Title: *Title 2* (Source: Source2)
+            Summary: Summary2
+
+            **Overall Summary**\n
+            Overall Summary
+            ```
+            """
+        )
+
+
 # Combine all elements into a single prompt
 LLMSTRATEGY_PROMPT = Collection(
     # BACKGROUND_PROMPT,
@@ -125,7 +146,7 @@ LLMSTRATEGY_PROMPT = Collection(
 )
 
 
-def format_macro_news(csv_file, filter_dates=None):
+def format_macro_news(csv_file, filter_dates=None, chunk_size=10):
     # Read CSV file
     df = pd.read_csv(csv_file)
     
@@ -143,10 +164,13 @@ def format_macro_news(csv_file, filter_dates=None):
         prompt_logger.info(f"{num_news} news entries selected.")
     else:
         prompt_logger.warning("No news entries selected after applying filters.")
-
+    
     # Process each row to extract relevant fields
-    news_entries = []
     df.sort_values(by='Date', ascending=True, inplace=True)
+    
+    news_chunks = []
+    chunk = []
+    
     for _, row in df.iterrows():
         date = row['Date'].strftime('%Y-%m-%d %H:%M:%S')
         title = row['Title']
@@ -160,14 +184,20 @@ def format_macro_news(csv_file, filter_dates=None):
             topic_list = "Unknown Topics"
         
         # Format each news entry
-        entry = f"Date: **{date}**\n\
-Title: *{title}* (Source: {source})\n\
-Summary: {summary}\n"
-        news_entries.append(entry)
+        entry = f"Date: **{date}**\nTitle: *{title}* (Source: {source})\nSummary: {summary}\n"
+        chunk.append(entry)
+        
+        # Append chunk if it reaches chunk_size
+        if len(chunk) == chunk_size:
+            news_chunks.append('\n\n'.join(chunk))
+            chunk = []
     
-    # Join all news entries into a single block
-    formatted_news = '\n\n'.join(news_entries)
-    return formatted_news
+    # Append any remaining news entries as the last chunk
+    if chunk:
+        news_chunks.append('\n\n'.join(chunk))
+    
+    return news_chunks
+
 
 def format_macro_indicator(macro_csv, mapping_csv, current_date, last_periods=4):
     # Load macroeconomic data
@@ -227,7 +257,7 @@ def format_macro_indicator(macro_csv, mapping_csv, current_date, last_periods=4)
 
 
 
-
+### Deprecated and will be deleted
 def format_news_entries(df):
     return "\n".join(
         f"- **Date**: {row.date}  \n  **Title**: {row.title}  \n  **Summary**: {row.summary}"
