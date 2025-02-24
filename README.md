@@ -1,6 +1,6 @@
 # LLMStrategy Data Pipeline
 
-At present, only the data pipeline, prompt specification, and LLM Agent are available (just the framework). Stay tuned for future updates. LLM inferencing is powered by Ollama, so feel free to explore Ollama for a variety of available models.
+At present, the data pipeline, prompt specification, and LLM Agent framework are available. Raw data can now be processed and fed into LLM agents. The README might be slightly out of date, but stay tuned for future updates. LLM inferencing is powered by Ollama, so feel free to explore Ollama for a variety of available models. Due to the high computational demands, users may need to utilise a free GPU on Google Colab and set up the environment using the `ColabTerminal.ipynb` file.
 <br>
 <br>
 Note: PromtCoder is developed by dhh1995 to streamline and modularise the creation of LLM Prompts.
@@ -61,7 +61,7 @@ set ALPHAVANTAGE_API_KEY='YOUR_ALPHAVANTAGE_API_KEY'
 
 Now, run the scraper:
 ```bash
-python CombinedScraper.py
+python CombinedScraper.py --scrape --process
 ```
 
 
