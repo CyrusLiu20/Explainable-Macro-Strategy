@@ -117,15 +117,15 @@ EXAMPLE_DECISION_PROMPT = NamedBlock(
 
 
 EXAMPLE_SUMMARY_PROMPT = NamedBlock(
-            name="Example Output Format (Select the top 1-3 most relevant news in order of importance for {asset}, keeping the exact title and providing a relevance reason. \
-                  Follow the exact format below (with keywords [Title]: and [Relevance]: so RegEx can extract) and include an overall summary.)",
+            name="Example Expected Output Format (Select the top 1-3 most relevant news in order of importance for {asset}, keeping the exact title and providing a relevance reason. \
+                  Follow the exact format below (with keywords [Title]: **Title 1** and [Relevance]: **Relevance 1** so RegEx can extract) and include an overall summary.)",
             content="""
             ```
             [Title]: **Title 1**
-            [Relevance]: **Reason 1**
+            [Relevance]: **Relevance 1**
 
             [Title]: **Title 2**
-            [Relevance]: **Reason 2**
+            [Relevance]: **Relevance 2**
 
             **Overall Summary**\n
             YOUR OVERALL SUMMARY

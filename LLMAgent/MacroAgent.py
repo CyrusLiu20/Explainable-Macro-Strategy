@@ -177,9 +177,16 @@ class FilterAgent(BaseAgent):
         :param raw_response: The full text response from the LLM.
         :return: A dictionary {title: relevance}
         """
+        # matches = re.findall(
+        #     r"(?:\*\*\[?Title\]?\*\*|\[?Title\]?:?)?\s*\**(.*?)\**\s*\n?"  # Matches **[Title]**, [Title]:, **Title**, or just plain text title
+        #     r"(?:\*\*\[?Relevance\]?\*\*|\[?Relevance\]?:?|Relevance:)?\s*\**(.*?)\**\s*(?:\n|---|$)",  # Matches relevance even without markers
+        #     raw_response, 
+        #     re.DOTALL
+        # )
+
         matches = re.findall(
-            r"(?:\*\*Title\s*\d*:?|\[Title\]):?\s*(?:\*{1,2})?(.*?)(?:\*{1,2})?\s*\n"  # Matches **Title X:** *Title* or [Title]: **Title**
-            r"(?:\*\*Relevance:\*\*|\[Relevance\]:|Relevance:)\s*(.*?)\n",  # Matches all "Relevance" formats
+            r"(?:\*\*\[?Title\]?\*\*|\[?Title\]?:?)\s*\**(.*?)\**\s*\n?"  # Matches **[Title]**, [Title]:, **Title**
+            r"(?:\*\*\[?Relevance\]?\*\*|\[?Relevance\]?:?|Relevance:)\s*\**(.*?)\**\s*(?:\n|---)",  # Matches relevance
             raw_response, 
             re.DOTALL
         )
@@ -197,6 +204,13 @@ class FilterAgent(BaseAgent):
         :param title_relevance_map: Dictionary mapping titles to their relevance from the LLM response.
         :return: A DataFrame containing Date, Source, Title, Summary, and Relevance.
         """
+
+        # If title_relevance_map is empty, return an empty DataFrame immediately
+        if not title_relevance_map:
+            self.log.warning("title_relevance_map is empty! Returning an empty DataFrame.")
+            return pd.DataFrame(columns=["Date", "Source", "Title", "Summary", "Relevance"])
+
+
         pattern = re.compile(
             r"Date: \*\*(.*?)\*\*\n"
             r"Title: \*(.*?)\* \(Source: (.*?)\)\n"
@@ -226,7 +240,8 @@ class FilterAgent(BaseAgent):
             else:
                 self.log.warning(f"No match found for news title: '{title}'")
 
-        df = pd.DataFrame(extracted_data)
+        # df = pd.DataFrame(extracted_data)
+        df = pd.DataFrame(extracted_data, columns=["Date", "Source", "Title", "Summary", "Relevance"])
 
         # Convert the Date column to pandas datetime format
         df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d %H:%M:%S", errors="coerce")
