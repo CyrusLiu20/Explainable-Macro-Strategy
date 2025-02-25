@@ -5,6 +5,8 @@ import pandas as pd
 import re
 import sys
 import os
+from typing import Dict, List
+from rapidfuzz import process, fuzz
 from procoder.functional import format_prompt
 from procoder.prompt import NamedBlock, Collection
 
@@ -104,8 +106,8 @@ class TradingAgent(BaseAgent):
 
 
 
-class SummaryAgent(BaseAgent):
-    def __init__(self, name: str, asset: str, logger_name: str = "SummaryAgent", model: str = "deepseek-r1:1.5b", has_system_prompt: bool = False):
+class FilterAgent(BaseAgent):
+    def __init__(self, name: str, asset: str, logger_name: str = "FilterAgent", model: str = "deepseek-r1:1.5b", has_system_prompt: bool = False):
         """
         Superclass of LLMAgent for summarizing and selecting impactful news.
 
@@ -136,14 +138,12 @@ class SummaryAgent(BaseAgent):
 
         self.log.info(f"Initialized SummaryAgent for {self.asset} with model {self.model}")
 
-    def get_impactful_news(self, news_entries: str) -> Dict[str, list[Dict[str, str]]]:
+    def filter_news(self, news_entries: str) -> pd.DataFrame:
         """
         Gets the most impactful news by interacting with the LLM and extracting the selected news.
 
         :param news_entries: A string containing news titles and summaries.
-        :return: A dictionary containing two keys:
-                 - "selected_news": A list of dictionaries containing the selected news titles and summaries.
-                 - "summary": A string containing an organized summary of the selected news.
+        :return: A DataFrame containing Date, Source, Title, and Summary.
         """
         # Format the input prompt
         self.INPUT_PROMPT = Collection(MACROECONOMIC_NEWS_PROMPT,
@@ -156,57 +156,88 @@ class SummaryAgent(BaseAgent):
 
         if status != "Success":
             self.log.error(f"Failed to get response from LLM: {status}")
-            return {"selected_news": [], "summary": ""}
+            return pd.DataFrame(columns=["Date", "Source", "Title", "Summary"])
 
-        self.log.debug(raw_response)
-        return raw_response
+        # Extract selected titles from the response
+        title_relevance_map = self._extract_titles(raw_response)
+        self.log.info(raw_response)
+        print("Extracted Relevant Titles")
+        self.log.info(title_relevance_map)
 
-        # # Parse the raw response into the expected format
-        # selected_news = self._parse_selected_news(raw_response)
-        # summary = self._parse_summary(raw_response)
+        # Extract full details from the original news entries
+        df = self._extract_news_details(news_entries, title_relevance_map)
 
-        # return {"selected_news": selected_news, "summary": summary}
+        return df
 
-    def _parse_selected_news(self, raw_response: str) -> list[Dict[str, str]]:
+
+    def _extract_titles(self, raw_response: str) -> dict:
         """
-        Parses the selected news from the raw response.
+        Extracts Titles and their corresponding Relevance from the raw LLM response.
 
-        :param raw_response: The raw response from the LLM.
-        :return: A list of dictionaries containing the selected news titles and summaries.
+        :param raw_response: The full text response from the LLM.
+        :return: A dictionary {title: relevance}
         """
-        selected_news = []
-        # Use regex to extract news entries
-        news_matches = re.findall(
-            r"Date: \*\*(.*?)\*\*\nTitle: \*(.*?)\* \(Source: (.*?)\)\nSummary: (.*?)\n(?=\n|$)",
-            raw_response,
+        matches = re.findall(
+            r"(?:\*\*Title\s*\d*:?|\[Title\]):?\s*(?:\*{1,2})?(.*?)(?:\*{1,2})?\s*\n"  # Matches **Title X:** *Title* or [Title]: **Title**
+            r"(?:\*\*Relevance:\*\*|\[Relevance\]:|Relevance:)\s*(.*?)\n",  # Matches all "Relevance" formats
+            raw_response, 
             re.DOTALL
         )
 
-        for match in news_matches:
-            date, title, source, summary = match
-            selected_news.append({
-                "date": date.strip(),
-                "title": title.strip(),
-                "source": source.strip(),
-                "summary": summary.strip()
-            })
+        # Convert list of tuples into a dictionary {title: relevance}
+        title_relevance_map = {title.strip(): relevance.strip() for title, relevance in matches}
+        return title_relevance_map
 
-        return selected_news
 
-    def _parse_summary(self, raw_response: str) -> str:
+    def _extract_news_details(self, news_entries: str, title_relevance_map: dict) -> pd.DataFrame:
         """
-        Parses the organized summary from the raw response.
+        Extracts Date, Title, Source, Summary, and Relevance from news_entries.
 
-        :param raw_response: The raw response from the LLM.
-        :return: A string containing the organized summary.
+        :param news_entries: The full text of all news entries.
+        :param title_relevance_map: Dictionary mapping titles to their relevance from the LLM response.
+        :return: A DataFrame containing Date, Source, Title, Summary, and Relevance.
         """
-        # Use regex to extract the summary
-        summary_match = re.search(
-            r"Summary: (.*?)(?=\n\n|$)",
-            raw_response,
+        pattern = re.compile(
+            r"Date: \*\*(.*?)\*\*\n"
+            r"Title: \*(.*?)\* \(Source: (.*?)\)\n"
+            r"Summary: (.*?)(?=\nDate: |\Z)",  # Matches everything until the next "Date" or end of text
             re.DOTALL
         )
-        return summary_match.group(1).strip() if summary_match else ""
+
+        matches = pattern.findall(news_entries)
+        extracted_data = []
+
+        for date, title, source, summary in matches:
+            title = title.strip()
+
+            # Find the best matching title from the LLM response
+            match_result = process.extractOne(title, title_relevance_map.keys(), scorer=fuzz.token_sort_ratio) if title_relevance_map else None
+            
+            if match_result:
+                best_match, score, _ = match_result
+                if score >= 70:  # Consider titles with at least 80% similarity
+                    extracted_data.append({
+                        "Date": date.strip(),
+                        "Source": source.strip(),
+                        "Title": best_match,  # Use the best-matching extracted title
+                        "Summary": summary.strip(),
+                        "Relevance": title_relevance_map[best_match]  # Retrieve the corresponding relevance
+                    })
+            else:
+                self.log.warning(f"No match found for news title: '{title}'")
+
+        df = pd.DataFrame(extracted_data)
+
+        # Convert the Date column to pandas datetime format
+        df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d %H:%M:%S", errors="coerce")
+
+        # Log a warning if the number of extracted news items is different from expected
+        if len(df) != len(title_relevance_map):
+            self.log.warning(
+                f"Mismatch in extracted news count! Expected {len(title_relevance_map)}, but got {len(df)}."
+            )
+
+        return df           
 
 
 

@@ -106,30 +106,29 @@ Provide an explanation for your prediction.
 EXAMPLE_DECISION_PROMPT = NamedBlock(
     name="Expected Output Format",
     content="""
-```
-Prediction: Bullish\n
-Explanation: The US GDP growth remains strong, inflation is declining, 
-and the Federal Reserve has signaled potential interest rate cuts. 
-This is likely to create a favorable market environment.
-```
+    ```
+    Prediction: Bullish\n
+    Explanation: The US GDP growth remains strong, inflation is declining, 
+    and the Federal Reserve has signaled potential interest rate cuts. 
+    This is likely to create a favorable market environment.
+    ```
     """
 )
 
 
 EXAMPLE_SUMMARY_PROMPT = NamedBlock(
-            name="Example Output Format (Please select the most relevant news from most important to least important for {asset} and give an overall summary)",
+            name="Example Output Format (Select the top 1-3 most relevant news in order of importance for {asset}, keeping the exact title and providing a relevance reason. \
+                  Follow the exact format below (with keywords [Title]: and [Relevance]: so RegEx can extract) and include an overall summary.)",
             content="""
             ```
-            Date: **Date1**
-            Title: *Title 1* (Source: Source1)
-            Summary: Summary1
+            [Title]: **Title 1**
+            [Relevance]: **Reason 1**
 
-            Date: **Date2**
-            Title: *Title 2* (Source: Source2)
-            Summary: Summary2
+            [Title]: **Title 2**
+            [Relevance]: **Reason 2**
 
             **Overall Summary**\n
-            Overall Summary
+            YOUR OVERALL SUMMARY
             ```
             """
         )

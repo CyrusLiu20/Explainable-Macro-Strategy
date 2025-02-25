@@ -91,10 +91,6 @@ class BaseAgent:
 
             return response_content, "Success"
 
-        except ollama.OllamaError as e:
-            self.log.critical(f"Ollama model error: {e}. Ensure the model '{self.model}' is pulled and available.")
-            return "", "Ollama model not found or not running."
-
         except ValueError as e:
             self.log.error(f"Input exceeded token limit: {e}")
             return "", "Input too long. Reduce the size of your query."
