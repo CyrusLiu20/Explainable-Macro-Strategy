@@ -102,10 +102,6 @@ class TradingAgent(BaseAgent):
         return extracted_response["prediction"], extracted_response["explanation"]
     
 
-
-
-
-
 class FilterAgent(BaseAgent):
     def __init__(self, name: str, asset: str, logger_name: str = "FilterAgent", model: str = "deepseek-r1:1.5b", has_system_prompt: bool = False):
         """
@@ -156,18 +152,18 @@ class FilterAgent(BaseAgent):
 
         if status != "Success":
             self.log.error(f"Failed to get response from LLM: {status}")
-            return pd.DataFrame(columns=["Date", "Source", "Title", "Summary"])
+            return pd.DataFrame(columns=["Date", "Source", "Title", "Summary"]), False
 
         # Extract selected titles from the response
         title_relevance_map = self._extract_titles(raw_response)
-        self.log.info(raw_response)
-        print("Extracted Relevant Titles")
-        self.log.info(title_relevance_map)
+        # self.log.info(raw_response)
+        # print("Extracted Relevant Titles")
+        # self.log.info(title_relevance_map)
 
         # Extract full details from the original news entries
-        df = self._extract_news_details(news_entries, title_relevance_map)
+        df, status_flag = self._extract_news_details(news_entries, title_relevance_map)
 
-        return df
+        return df, status_flag
 
 
     def _extract_titles(self, raw_response: str) -> dict:
@@ -177,13 +173,6 @@ class FilterAgent(BaseAgent):
         :param raw_response: The full text response from the LLM.
         :return: A dictionary {title: relevance}
         """
-        # matches = re.findall(
-        #     r"(?:\*\*\[?Title\]?\*\*|\[?Title\]?:?)?\s*\**(.*?)\**\s*\n?"  # Matches **[Title]**, [Title]:, **Title**, or just plain text title
-        #     r"(?:\*\*\[?Relevance\]?\*\*|\[?Relevance\]?:?|Relevance:)?\s*\**(.*?)\**\s*(?:\n|---|$)",  # Matches relevance even without markers
-        #     raw_response, 
-        #     re.DOTALL
-        # )
-
         matches = re.findall(
             r"(?:\*\*\[?Title\]?\*\*|\[?Title\]?:?)\s*\**(.*?)\**\s*\n?"  # Matches **[Title]**, [Title]:, **Title**
             r"(?:\*\*\[?Relevance\]?\*\*|\[?Relevance\]?:?|Relevance:)\s*\**(.*?)\**\s*(?:\n|---)",  # Matches relevance
@@ -208,7 +197,7 @@ class FilterAgent(BaseAgent):
         # If title_relevance_map is empty, return an empty DataFrame immediately
         if not title_relevance_map:
             self.log.warning("title_relevance_map is empty! Returning an empty DataFrame.")
-            return pd.DataFrame(columns=["Date", "Source", "Title", "Summary", "Relevance"])
+            return pd.DataFrame(columns=["Date", "Source", "Title", "Summary", "Relevance"]), False
 
 
         pattern = re.compile(
@@ -247,12 +236,20 @@ class FilterAgent(BaseAgent):
         df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d %H:%M:%S", errors="coerce")
 
         # Log a warning if the number of extracted news items is different from expected
+        status_flag = True
         if len(df) != len(title_relevance_map):
-            self.log.warning(
-                f"Mismatch in extracted news count! Expected {len(title_relevance_map)}, but got {len(df)}."
-            )
+            if len(title_relevance_map) >= 2 and abs(len(df) - len(title_relevance_map)) == 1:
+                self.log.warning(
+                    f"Small mismatch in extracted news count, but proceeding. Expected {len(title_relevance_map)}, got {len(df)}."
+                )
+            else:
+                status_flag = False  # Only set to False if the mismatch is significant
+                self.log.warning(
+                    f"Mismatch in extracted news count! Expected {len(title_relevance_map)}, but got {len(df)}."
+                )
 
-        return df           
+
+        return df, status_flag      
 
 
 
