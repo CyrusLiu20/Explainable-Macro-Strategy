@@ -20,17 +20,17 @@ def main(scrape: bool, process: bool):
 
     if scrape:
 
-        # Initialize and run the FRED data scraper
-        fred_scraper = FredDataScraper(
-            config_file=config_root / "fred_config.json",
-            log_file=log_root / "fred_scraper.log"
-        )
-        fred_scraper.scrape_and_save_all(data_root / "MacroIndicators")
+        # # Initialize and run the FRED data scraper
+        # fred_scraper = FredDataScraper(
+        #     config_file=config_root / "fred_config.json",
+        #     log_file=log_root / "fred_scraper.log"
+        # )
+        # fred_scraper.scrape_and_save_all(data_root / "MacroIndicators")
 
         # Process AlphaVantage config
         input_file = config_root / "alphavantage_config_orig.json"
         output_file = config_root / "alphavantage_config.json"
-        selected_types = ["economy_monetary"]
+        selected_types = ["finance"]
         date_range = ("20220101T0130", "20250220T0130")
         splittime.process_config(input_file, output_file, selected_types=selected_types, date_range=date_range, months=1)
 

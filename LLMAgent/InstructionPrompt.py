@@ -4,6 +4,7 @@ from Utilities.Logger import logger
 
 import ast
 import pandas as pd
+import matplotlib.pyplot as plt
 
 prompt_logger = logger(name="PromptLogger", log_file="Logs/prompt_logger.log")
 
@@ -46,12 +47,13 @@ MACROECONOMIC_NEWS_SELECTION_PROMPT = NamedBlock(
     content="""
 Your Task is to review a list news articles each day and identify which headlines and summaries provide relevant information for a macro strategy \
 to trade {asset}. The selected news should be related to global economic conditions, government policies, or major market-moving \
-events that could influence US Treasury yields, particularly the 10-Year Treasury bond. Your output will be fed into another Large Language Model \
+events that could influence {asset}. Your output will be fed into another Large Language Model \
 to further infer trading decision.
 
 The model should output:
-1. 5-10 selected news headlines and summaries.
-2. A brief explanation of why the news is relevant to US 10-Year Treasury bond trading, rephrased for clarity when necessary.
+1. Select the top 1-3 most relevant news in order of importance for {asset} (keeping the exact title and providing a relevance reason).
+2. Follow the exact format below (with keywords [Title]: **Title 1** and [Relevance]: **Relevance 1** so RegEx can extract).
+2. A brief explanation of why the news is relevant to trading {asset}.
 
 """
 )
@@ -148,10 +150,10 @@ LLMSTRATEGY_PROMPT = Collection(
 def format_macro_news(csv_file, filter_dates=None, chunk_size=10):
     # Read CSV file
     df = pd.read_csv(csv_file)
-    
+
     # Convert 'Date' column to datetime format
     df['Date'] = pd.to_datetime(df['Date'])
-    
+
     # Filter by dates if filter_dates is provided
     if filter_dates:
         filter_dates = [pd.to_datetime(date).date() for date in filter_dates]

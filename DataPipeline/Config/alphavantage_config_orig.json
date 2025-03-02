@@ -19,6 +19,20 @@
       "time_to": "20250220T0130",
       "file_name": "macro.csv",
       "limit": 1000
+    },
+    {
+      "topic": "financial_markets",
+      "time_from": "20180101T0130",
+      "time_to": "20250220T0130",
+      "file_name": "financial_markets.csv",
+      "limit": 1000
+    },
+    {
+      "topic": "finance",
+      "time_from": "20180101T0130",
+      "time_to": "20250220T0130",
+      "file_name": "finance.csv",
+      "limit": 1000
     }
   ]
   
