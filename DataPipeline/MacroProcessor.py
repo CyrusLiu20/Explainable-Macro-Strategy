@@ -19,7 +19,8 @@ class NewsDataProcessor(DataProcessor):
             rename_columns={"time_published": "Date"}
         )
 
-        self.prefixes = ["fiscal", "monetary", "macro", "financial_markets", "finance"]
+        # self.prefixes = ["fiscal", "monetary", "macro", "financial_markets", "finance"]
+        self.prefixes = ["fiscal", "monetary", "macro"]
         self.output_file = "MacroNews"
 
     def process_data(self, prefixes=""):
@@ -29,7 +30,7 @@ class NewsDataProcessor(DataProcessor):
             return
 
         df = super().read_and_concatenate_csvs(csv_files)
-        df = super().remove_duplicates(df)
+        df = super().remove_duplicates(df, macro_news=True)
         df = super().handle_missing_dates(df)
         df = super().process_columns(df)
         super().save_processed_data(df, filename=f"{self.output_file}.csv")

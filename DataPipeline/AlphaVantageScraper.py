@@ -69,7 +69,7 @@ class AlphaVantageScraper:
         except Exception as e:
             self.logger.error(f"Error saving {file_name}: {e}")
 
-    def scrape_and_save_all(self, folder_path):
+    def scrape_and_save_all(self, folder_path, sort='LATEST'):
         """
         Fetches and saves all topics specified in the JSON config file.
         """
@@ -88,6 +88,6 @@ class AlphaVantageScraper:
             file_name = topic["file_name"]
             limit = topic["limit"]
 
-            df = self.fetch_news_sentiment(topic_name, time_from, time_to, limit=limit)
+            df = self.fetch_news_sentiment(topic_name, time_from, time_to, limit=limit, sort=sort)
             if not df.empty:
                 self.save_to_csv(df, folder_path, file_name)

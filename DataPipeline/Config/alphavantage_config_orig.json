@@ -3,21 +3,21 @@
       "topic": "economy_fiscal",
       "time_from": "20180101T0130",
       "time_to": "20250220T0130",
-      "file_name": "fiscal.csv",
+      "file_name": "fiscal_second.csv",
       "limit": 1000
     },
     {
       "topic": "economy_monetary",
       "time_from": "20180101T0130",
       "time_to": "20250220T0130",
-      "file_name": "monetary.csv",
+      "file_name": "monetary_second.csv",
       "limit": 1000
     },
     {
       "topic": "economy_macro",
       "time_from": "20180101T0130",
       "time_to": "20250220T0130",
-      "file_name": "macro.csv",
+      "file_name": "macro_second.csv",
       "limit": 1000
     },
     {

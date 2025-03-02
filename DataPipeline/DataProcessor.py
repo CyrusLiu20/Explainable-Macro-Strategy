@@ -75,12 +75,26 @@ class DataProcessor:
         return merged_df
 
 
-    def remove_duplicates(self, df):
-        """Remove duplicate rows and log the count."""
+    def remove_duplicates(self, df, macro_news=False):
+        """Remove duplicate rows, with an option to filter by specific columns if macro_news is True."""
         initial_count = len(df)
-        df.drop_duplicates(inplace=True)
+        
+        if macro_news:
+            required_cols = {"summary", "time_published", "title", "source"}
+            missing_cols = required_cols - set(df.columns)
+            
+            if missing_cols:
+                self.log.error(f"Missing columns in DataFrame: {missing_cols}")
+                return df  # Return the original DataFrame without modification
+            
+            df = df.drop_duplicates(subset=required_cols)
+        else:
+            df = df.drop_duplicates()
+        
+        df = df.reset_index(drop=True)  # Reset index to maintain consistency
         duplicates_removed = initial_count - len(df)
         self.log.info(f"Number of duplicate entries removed: {duplicates_removed}")
+        
         return df
 
     def handle_missing_dates(self, df):

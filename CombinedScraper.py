@@ -20,17 +20,17 @@ def main(scrape: bool, process: bool):
 
     if scrape:
 
-        # # Initialize and run the FRED data scraper
-        # fred_scraper = FredDataScraper(
-        #     config_file=config_root / "fred_config.json",
-        #     log_file=log_root / "fred_scraper.log"
-        # )
-        # fred_scraper.scrape_and_save_all(data_root / "MacroIndicators")
+        # Initialize and run the FRED data scraper
+        fred_scraper = FredDataScraper(
+            config_file=config_root / "fred_config.json",
+            log_file=log_root / "fred_scraper.log"
+        )
+        fred_scraper.scrape_and_save_all(data_root / "MacroIndicators")
 
         # Process AlphaVantage config
         input_file = config_root / "alphavantage_config_orig.json"
         output_file = config_root / "alphavantage_config.json"
-        selected_types = ["finance"]
+        selected_types = ["economy_macro"]
         date_range = ("20220101T0130", "20250220T0130")
         splittime.process_config(input_file, output_file, selected_types=selected_types, date_range=date_range, months=1)
 
@@ -39,7 +39,7 @@ def main(scrape: bool, process: bool):
             config_file=config_root / "alphavantage_config.json",
             log_file=log_root / "alphavantage_scraper.log"
         )
-        alphavantage_scraper.scrape_and_save_all(data_root / "MacroNews")
+        alphavantage_scraper.scrape_and_save_all(folder_path=data_root / "MacroNews", sort='EARLIEST')
 
     if process:
         # Process news data
