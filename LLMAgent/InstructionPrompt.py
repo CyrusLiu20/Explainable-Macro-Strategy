@@ -136,6 +136,7 @@ EXAMPLE_SUMMARY_PROMPT = NamedBlock(
         )
 
 
+### Deprecated and will be deleted
 # Combine all elements into a single prompt
 LLMSTRATEGY_PROMPT = Collection(
     # BACKGROUND_PROMPT,
@@ -178,12 +179,6 @@ def format_macro_news(csv_file, filter_dates=None, chunk_size=10):
         summary = row['Summary']
         source = row['Source']
         
-        try:
-            topics = ast.literal_eval(row['Topics'])  # Convert string to list of dicts
-            topic_list = ', '.join([t['topic'] for t in topics])
-        except (ValueError, SyntaxError):
-            topic_list = "Unknown Topics"
-        
         # Format each news entry
         entry = f"Date: **{date}**\nTitle: *{title}* (Source: {source})\nSummary: {summary}\n"
         chunk.append(entry)
@@ -208,7 +203,7 @@ def format_macro_indicator(macro_csv, mapping_csv, current_date, last_periods=4)
     # Convert date columns to datetime
     macro_df['Date'] = pd.to_datetime(macro_df['Date'])
     current_date = pd.to_datetime(current_date)
-    
+
     # Map Series IDs to Renamed Series
     rename_dict = dict(zip(mapping_df['Series ID'], mapping_df['Renamed Series']))
     macro_df.rename(columns=rename_dict, inplace=True)
@@ -221,7 +216,7 @@ def format_macro_indicator(macro_csv, mapping_csv, current_date, last_periods=4)
 
     # Infer frequency from the filename
     freq_days = {"Daily": 1, "Weekly": 7, "Monthly": 30, "Quarterly": 90}
-    inferred_freq = next((freq for freq in freq_days if freq in macro_csv), "Unknown")
+    inferred_freq = next((freq for freq in freq_days if freq in str(macro_csv)), "Unknown")
     
     # Apply delay to prevent data leakage
     delay_dict = dict(zip(mapping_df['Renamed Series'], mapping_df['Delay (Days)']))
@@ -231,7 +226,10 @@ def format_macro_indicator(macro_csv, mapping_csv, current_date, last_periods=4)
             published_cutoff = current_date - pd.Timedelta(days=delay_days)
             macro_df.loc[macro_df['Date'] > published_cutoff, col] = "Not Yet Published"
 
-    # Compute period difference AFTER filtering to prevent issues
+    # Present the latest data up to the current date
+    macro_df = macro_df[macro_df['Date'] < current_date]
+
+    # Compute period difference AFTER filtering for concise LLM prompt
     if inferred_freq in freq_days:
         period_days = freq_days[inferred_freq]
         macro_df['Period Diff'] = (current_date - macro_df['Date']).dt.days // period_days
@@ -251,9 +249,8 @@ def format_macro_indicator(macro_csv, mapping_csv, current_date, last_periods=4)
     rows = [" | ".join(str(row[col]).ljust(col_widths[col]) for col in macro_df.columns) for _, row in macro_df.iterrows()]
     
     # Final formatted output
-    formatted_output = f"Here are the macroeconomic indicators and their values:\n{header}\n{separator}\n" + "\n".join(rows)
-    
-    print(formatted_output)  # Optional: Log the output
+    formatted_output = f"Here are the {inferred_freq} macroeconomic indicators and their values:\n{header}\n{separator}\n" + "\n".join(rows)
+
     return formatted_output
 
 

@@ -7,7 +7,7 @@ def write_mapping(folder_path=None, output_filename="indicator_mapping.csv"):
     header_row = ["Series ID", "Renamed Series", "Delay (Days)", "Trade Frequency"]
     series_data = [
         ("SP500",           "S&P 500",                      0,      "Daily"),
-        ("GDP",             "US GDP",                       60,     "Quarterly"),
+        ("GDP",             "US GDP",                       30,     "Quarterly"),
         ("CPIAUCSL",        "US Urban CPI",                 14,     "Monthly"),
         ("UNRATE",          "US Unemployment Rate",         7,      "Monthly"),
         ("MICH",            "UoM Inflation Expect",         21,     "Monthly"),
@@ -27,8 +27,8 @@ def write_mapping(folder_path=None, output_filename="indicator_mapping.csv"):
         ("DGS5",            "5Y Treasury Yield",            0,      "Daily"),
         ("DGS2",            "2Y Treasury Yield",            0,      "Daily"),
         ("DGS30",           "30Y Treasury Yield",           0,      "Daily"),
-        ("A939RX0Q048SBEA", "Real GDP per Capita",          180,    "Quarterly"),
-        ("GDPC1",           "Real GDP",                     90,     "Quarterly"),
+        ("A939RX0Q048SBEA", "Real GDP per Capita",          30,     "Quarterly"),
+        ("GDPC1",           "Real GDP",                     30,     "Quarterly"),
         ("PPIACO",          "PPI",                          14,     "Monthly"),
         ("HNFSEPUSSA",      "New Home Sales",               28,     "Monthly"),
         ("DEXUSEU",         "EUR/USD",                      0,      "Daily"),
