@@ -1,10 +1,6 @@
-from DataPipeline.CensusScraper import CensusDataScraper
-from DataPipeline.FredScraper import FredDataScraper
-from DataPipeline.AlphaVantageScraper import AlphaVantageScraper
-
-from DataPipeline.Data.MacroIndicators.IndicatorMapping import write_mapping
-import DataPipeline.Config.SplitTime as splittime
-from DataPipeline.MacroProcessor import NewsDataProcessor, IndicatorDataProcessor
+from DataPipeline import CensusDataScraper, FredDataScraper, AlphaVantageScraper
+from DataPipeline import NewsDataProcessor, IndicatorDataProcessor
+from DataPipeline import splittime, write_mapping
 
 import argparse
 from pathlib import Path
