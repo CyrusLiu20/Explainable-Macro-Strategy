@@ -1,13 +1,27 @@
 import pandas as pd
+import textwrap
 import sys
 import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from Utilities.Logger import logger
 from LLMAgent.InstructionPrompt import *
-from LLMAgent.BaseAgent import BaseAgent
-from LLMAgent.MacroAgent import FilterAgent
+from LLMAgent import FilterAgent
+from procoder.functional import format_prompt
+from procoder.prompt import NamedBlock
 
+# Recent Macroeconomic News Block
+MACROECONOMIC_NEWS_PROMPT = NamedBlock(
+    name="Recent Macroeconomic News",
+    content=textwrap.dedent("""\
+        ```
+        Below is a summary of recent macroeconomic news articles and key events
+        on {current_date} that may impact financial markets.
+
+        {news_chunk}
+        ```
+    """)
+)
 
 class MacroAggregator:
     def __init__(self, news_path, asset, model, output_path="filtered_news.csv", verbose=True,
@@ -49,7 +63,7 @@ class MacroAggregator:
         :return: DataFrame containing filtered news for the specified dates.
         """
         try:
-            news_chunks = format_macro_news(csv_file=self.output_path, filter_dates=filter_dates, chunk_size=1e1)
+            news_chunk = format_macro_news(csv_file=self.output_path, filter_dates=filter_dates, chunk_size=1e1)
             self.log.info(f"Loaded filtered news from {self.output_path}")
         except FileNotFoundError:
             self.log.warning(f"File not found: {self.output_path}")
@@ -62,9 +76,9 @@ class MacroAggregator:
             self.log.error(f"Error loading CSV: {e}")
             return pd.DataFrame()
 
-        return news_chunks
+        return news_chunk
 
-    def aggregate_news_llm(self, filter_dates, max_retries=5):
+    def aggregate_news_llm(self, filter_dates, max_retries=3):
         """
         Processes and concatenates impactful news for all given dates and saves it as a CSV.
 
@@ -104,6 +118,7 @@ class MacroAggregator:
 
         return format_macro_news(self.output_path)
 
+
     def aggregate_indicators(self):
         """
         Aggregates macro indicators based on the initialized parameters.
@@ -115,7 +130,60 @@ class MacroAggregator:
             indicator_text.append(format_macro_indicator(macro_csv, self.mapping_csv, self.current_date, last_periods=last_periods))
 
         combined_indicator_text = "\n\n".join(indicator_text)
-        self.log.debug(combined_indicator_text)
+        # self.log.debug(combined_indicator_text)
 
         return combined_indicator_text
     
+
+    def aggregate_all(self, filter_dates=None, filter_agent=False, max_retries=3):
+        """
+        Combines macro indicators and filtered news into a single aggregated output.
+
+        :param filter_dates: List of dates to filter news.
+        :param max_retries: Maximum number of retries for failed filtering attempts.
+        :return: A dictionary containing aggregated macro indicators and news.
+        """
+        self.log.info("Aggregating macro indicators and news...")
+        
+        # Aggregate macro indicators
+        indicator_text = self.aggregate_indicators()
+        
+        # Aggregate news using LLM
+        news_chunk = self.aggregate_news(filter_dates=filter_dates, filter_agent=filter_agent, max_retries=max_retries)
+        news_text = format_prompt(MACROECONOMIC_NEWS_PROMPT,{"current_date": self.current_date, "news_chunk": news_chunk[0]})
+
+        # Combine both aggregations
+        aggregated_output = f"Macro Indicators:\n{indicator_text}\n\n{news_text}"
+        
+        self.log.debug(aggregated_output)
+        self.log.info(f"Aggregation complete for {self.current_date}.")
+        return aggregated_output
+
+
+log = logger(name="FileChecker", log_file=f"Logs/file_checker.log")
+
+def check_file_paths(file_paths):
+    """
+    Checks whether the given list of CSV file paths exist, are valid CSV files, and are not empty.
+    
+    Args:
+        file_paths (list of str): List of file paths to check.
+    
+    Returns:
+        None
+    """
+    
+    for file_path in file_paths:
+        if not os.path.isfile(file_path):
+            log.warning(f"File does not exist: {file_path}")
+            continue
+        
+        try:
+            df = pd.read_csv(file_path)
+            if df.empty:
+                log.warning(f"File is empty: {file_path}")
+
+        except Exception as e:
+            log.error(f"Invalid CSV format for {file_path}: {e}")
+
+    log.info(f"All file paths are valid and non-empty")

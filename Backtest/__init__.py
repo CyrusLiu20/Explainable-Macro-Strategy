@@ -1,5 +1,6 @@
-from .MacroAggregate import MacroAggregator
+from .MacroAggregate import MacroAggregator, check_file_paths
 
 __all__ = [
-    "MacroAggregator"
+    "MacroAggregator",
+    "check_file_paths"
 ]
