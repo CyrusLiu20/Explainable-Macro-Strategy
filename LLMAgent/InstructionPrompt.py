@@ -1,3 +1,4 @@
+import textwrap
 from procoder.functional import format_prompt
 from procoder.prompt import NamedBlock, NamedVariable, Collection
 from Utilities.Logger import logger
@@ -13,7 +14,7 @@ BACKGROUND_PROMPT = NamedBlock(
     name="Background",
     content="""
 You are a quantitative macro trader developing an **Explainable LLM-based Trading Strategy**.  
-Your goal is to predict the future trend of **[{asset_name}]** (Ticker: **[{ticker_name}]**)  
+Your goal is to predict the future price of **[{asset_name}]** (Ticker: **[{ticker_name}]**)  
 by analyzing both **structured macroeconomic numerical data** and **unstructured financial news text data**.  
 
 Your strategy must not only make accurate predictions but also provide clear explanations  
@@ -44,20 +45,17 @@ These macroeconomic indicators include:
 # Define prompt for LLM to choose relevant news for trading US 10 Year Treasury bonds
 MACROECONOMIC_NEWS_SELECTION_PROMPT = NamedBlock(
     name="Summarise Macroeconomic News for {asset}",
-    content="""
-Your Task is to review a list news articles each day and identify which headlines and summaries provide relevant information for a macro strategy \
-to trade {asset}. The selected news should be related to global economic conditions, government policies, or major market-moving \
-events that could influence {asset}. Your output will be fed into another Large Language Model \
-to further infer trading decision.
+    content=textwrap.dedent("""
+    Your task is to review a list of news articles each day and identify which headlines and summaries provide relevant information for a macro strategy 
+    to trade {asset}. The selected news should be related to global economic conditions, government policies, or major market-moving 
+    events that could influence {asset}. Your output will be fed into another Large Language Model to further infer trading decisions.
 
-The model should output:
-1. Select the top 1-3 most relevant news in order of importance for {asset} (keeping the exact title and providing a relevance reason).
-2. Follow the exact format below (with keywords [Title]: **Title 1** and [Relevance]: **Relevance 1** so RegEx can extract).
-2. A brief explanation of why the news is relevant to trading {asset}.
-
-"""
+    The model should output:
+    1. Select the top 1-3 most relevant news items in order of importance for {asset} (keeping the exact title and providing a relevance reason).
+    2. Follow the exact format below (with keywords [Title]: **Title 1** and [Relevance]: **Relevance 1** so RegEx can extract).
+    3. A brief explanation of why the news is relevant to trading {asset}.
+    """)
 )
-
 
 ### Deprecated and will be deleted
 # Define dataset dynamically using the generated CSV string
@@ -73,67 +71,65 @@ MACROECONOMIC_DATASET_PROMPT = NamedBlock(
 # Recent Macroeconomic News Block
 MACROECONOMIC_NEWS_PROMPT = NamedBlock(
     name="Recent Macroeconomic News",
-    content="""
-Below is a summary of recent macroeconomic news articles and key events  
-that may impact financial markets. Please select 5-10 News that is the most impactful for trading {asset}
+    content=textwrap.dedent("""
+    Below is a summary of recent macroeconomic news articles and key events  
+    that may impact financial markets. Please select the top 1-3 most relevant news in order of importance {asset}
 
-{news_entries}
-    """
+    {news_entries}
+    """)
 )
 
 
 
 
 DECISION_PROMPT = NamedBlock(
-    name="Decision (Forecast Trend)",
-    content="""
-Based on the provided macroeconomic indicators and recent economic news, 
-predict the overall trend of the next half-year price movement for [{asset_name}].
+    name="Decision (Forecast Price)",
+    content=textwrap.dedent("""
+    Based on the provided macroeconomic indicators and recent economic news, 
+    predict the price of the future movement for [{asset}].
 
-Only output one of the following options:
-- Strongly Bullish
-- Bullish
-- Slightly Bullish
-- Flat
-- Fluctuating
-- Slightly Bearish
-- Bearish
-- Strongly Bearish
+    Only output one of the following options:
+    - Strongly Bullish
+    - Bullish
+    - Slightly Bullish
+    - Flat
+    - Fluctuating
+    - Slightly Bearish
+    - Bearish
+    - Strongly Bearish
 
-Provide an explanation for your prediction.
-    """
+    Provide an explanation for your prediction.
+    """)
 )
 
 
 EXAMPLE_DECISION_PROMPT = NamedBlock(
     name="Expected Output Format",
-    content="""
+    content=textwrap.dedent("""
     ```
-    Prediction: Bullish\n
-    Explanation: The US GDP growth remains strong, inflation is declining, 
-    and the Federal Reserve has signaled potential interest rate cuts. 
-    This is likely to create a favorable market environment.
+    Prediction: [Trend]\n
+    Explanation: [Explanation]
     ```
-    """
+    """)
 )
 
 
 EXAMPLE_SUMMARY_PROMPT = NamedBlock(
-            name="Example Expected Output Format (Select the top 1-3 most relevant news in order of importance for {asset}, keeping the exact title and providing a relevance reason. \
-                  Follow the exact format below (with keywords [Title]: **Title 1** and [Relevance]: **Relevance 1** so RegEx can extract) and include an overall summary.)",
-            content="""
-            ```
-            [Title]: **Title 1**
-            [Relevance]: **Relevance 1**
+    name="Example Expected Output Format (Select the top 1-3 most relevant news in order of importance for {asset}, keeping the exact title and providing a relevance reason. \
+          Follow the exact format below (with keywords [Title]: **Title 1** and [Relevance]: **Relevance 1** so RegEx can extract) and include an overall summary.)",
+    content="""
+    ```
+    [Title]: **Title 1**
+    [Relevance]: **Relevance 1**
 
-            [Title]: **Title 2**
-            [Relevance]: **Relevance 2**
+    [Title]: **Title 2**
+    [Relevance]: **Relevance 2**
 
-            **Overall Summary**\n
-            YOUR OVERALL SUMMARY
-            ```
-            """
-        )
+    **Overall Summary**\n
+    YOUR OVERALL SUMMARY
+    ```
+    """
+)
 
 
 ### Deprecated and will be deleted

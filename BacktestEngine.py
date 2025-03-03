@@ -1,14 +1,21 @@
 import argparse
+from pickle import STRING
 import pandas as pd
 from pathlib import Path
 from dataclasses import dataclass, field
 
 from Backtest import MacroAggregator, check_file_paths
+from Backtest import NewsDrivenFramework
 from LLMAgent.InstructionPrompt import *
 from DataPipeline import write_mapping
 
+# Configurations and variables for backtesting
 @dataclass
-class Config:
+class BacktestConfig:
+    asset: str = "US 10-year Treasury bonds"
+    model: str = "deepseek-r1:32b"
+    has_system_prompt: bool = False # Whether the LLM model has a system message
+    ticker: str = "IEF"
     data_root: Path = Path("DataPipeline/Data")
     output_path: Path = Path("Backtest/AggregatedData/AggregatedNews.csv")
     dates: list = field(default_factory=lambda: ["2022-12-13"])
@@ -30,22 +37,27 @@ class Config:
         ]
 
 def main(aggregate: bool):
-    config = Config()
-    check_file_paths([*config.macro_csv_list, config.news_path, config.mapping_csv])
+    backtest_config = BacktestConfig()
+    files_exist = check_file_paths([*backtest_config.macro_csv_list, backtest_config.news_path, backtest_config.mapping_csv])
 
-    if aggregate:
-        aggregator = MacroAggregator(
-            news_path=config.news_path,
-            asset="US 10-year Treasury bonds",
-            model="deepseek-r1:8b",
-            output_path=config.output_path,
-            macro_csv_list=config.macro_csv_list,
-            mapping_csv=config.mapping_csv,
-            current_date=config.dates[0],
-            last_periods_list=config.last_periods_list
-        )
+    if aggregate and files_exist:
+        # aggregator = MacroAggregator(
+        #     news_path=backtest_config.news_path,
+        #     asset=backtest_config.asset,
+        #     model=backtest_config.model,
+        #     output_path=backtest_config.output_path,
+        #     macro_csv_list=backtest_config.macro_csv_list,
+        #     mapping_csv=backtest_config.mapping_csv,
+        #     current_date=backtest_config.dates[0],
+        #     last_periods_list=backtest_config.last_periods_list
+        # )
 
-        event_prompt = aggregator.aggregate_all(filter_dates=config.dates, filter_agent=False)
+        # event_prompt = aggregator.aggregate_all(filter_dates=backtest_config.dates, filter_agent=False)
+
+      news_driven_framework = NewsDrivenFramework(backtest_config)
+      backtest_results = news_driven_framework.backtest(["2022-12-13"])
+
+      print(backtest_results)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run macro data aggregation")
@@ -53,3 +65,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(aggregate=args.aggregate)
+
+
+

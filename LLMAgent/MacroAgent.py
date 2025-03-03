@@ -5,6 +5,7 @@ import pandas as pd
 import re
 import sys
 import os
+import textwrap
 from typing import Dict, List
 from rapidfuzz import process, fuzz
 from procoder.functional import format_prompt
@@ -25,7 +26,8 @@ from procoder.prompt import NamedBlock, Collection
 class TradingAgent(BaseAgent):
     def __init__(self, asset: str, ticker: str, name: str = "TradingAgent", 
                  logger_name: str ="TradingAgent", model: str = "deepseek-r1:1.5b", 
-                 style: str = "risk_neutral", risk_tolerance: str = "medium"):
+                 style: str = "risk_neutral", risk_tolerance: str = "medium",
+                 has_system_prompt: bool = False):
         """
         Subclass of LLMAgent for trading-specific functionality.
 
@@ -40,15 +42,16 @@ class TradingAgent(BaseAgent):
         self.ticker = ticker
         self.style = style
         self.risk_tolerance = risk_tolerance
+        self.has_system_prompt = has_system_prompt
 
         # Define system message using procoder
         self.STYLE_PROMPT = NamedBlock(
-            name="SystemMessage",
-            content="""
+            name="System Message",
+            content=textwrap.dedent("""
                 You are analyzing market data and need to make a decision based on the following criteria:
                 - Trading Style: {style}
                 - Risk Tolerance: {risk_tolerance}
-            """
+            """)
         )
         self.SYSTEM_PROMPT = Collection(BACKGROUND_PROMPT, self.STYLE_PROMPT)
 
@@ -58,10 +61,39 @@ class TradingAgent(BaseAgent):
             {"style": self.style, "risk_tolerance": self.risk_tolerance, "asset_name": self.asset, "ticker_name": self.ticker}
         )
 
+        # Define the expected and example output
+        self.EXAMPLE_PROMPT = Collection(DECISION_PROMPT, EXAMPLE_DECISION_PROMPT)
+        self.example_prompt = format_prompt(self.EXAMPLE_PROMPT,{"asset": self.asset})
+
         # Initialize the base class
         super().__init__(name=name, logger_name=logger_name, model=model, system_prompt=system_prompt)
 
         self.log.info(f"Initialized TradingAgent for {self.asset} ({self.ticker}) with model {self.model}")
+
+
+    def get_trading_decision(self, input_prompt: str) -> tuple[str, str]:
+        """
+        Gets a trading decision by interacting with the LLM and extracting the prediction and explanation.
+
+        :param input_prompt: The user's input prompt.
+        :return: A tuple containing the prediction and explanation.
+        """
+        # Get raw response from the base class
+        input_prompt = f"{input_prompt}\n\n{self.example_prompt}"
+        raw_response, status = self.response(input_prompt, self.has_system_prompt)
+        self.log.info(raw_response)
+
+        if status != "Success":
+            return "Error", status
+
+        # Extract prediction and explanation
+        extracted_response = self.extract_prediction(raw_response)
+
+        if extracted_response["prediction"] == "Unknown":
+            self.log.warning("LLM returned 'Unknown' as the prediction. Check the response format.")
+
+        return extracted_response["prediction"], extracted_response["explanation"]
+    
 
     def extract_prediction(self, response_content: str) -> Dict[str, str]:
         """
@@ -78,29 +110,11 @@ class TradingAgent(BaseAgent):
         explanation_match = re.search(r"(?:\*\*)?\s*Explanation:\s*\n*(.*)", response_content, re.DOTALL | re.IGNORECASE)
         explanation = explanation_match.group(1).strip() if explanation_match else "No explanation found."
 
-        return {"prediction": prediction, "explanation": explanation}
+        return {"prediction": prediction, "explanation": explanation} 
 
-    def get_trading_decision(self, input_prompt: str) -> tuple[str, str]:
-        """
-        Gets a trading decision by interacting with the LLM and extracting the prediction and explanation.
 
-        :param input_prompt: The user's input prompt.
-        :return: A tuple containing the prediction and explanation.
-        """
-        # Get raw response from the base class
-        raw_response, status = self.response(input_prompt)
 
-        if status != "Success":
-            return "Error", status
 
-        # Extract prediction and explanation
-        extracted_response = self.extract_prediction(raw_response)
-
-        if extracted_response["prediction"] == "Unknown":
-            self.loglog.warning("LLM returned 'Unknown' as the prediction. Check the response format.")
-
-        return extracted_response["prediction"], extracted_response["explanation"]
-    
 
 class FilterAgent(BaseAgent):
     def __init__(self, name: str, asset: str, logger_name: str = "FilterAgent", model: str = "deepseek-r1:1.5b", has_system_prompt: bool = False):

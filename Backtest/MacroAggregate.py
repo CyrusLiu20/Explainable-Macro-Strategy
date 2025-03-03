@@ -185,5 +185,7 @@ def check_file_paths(file_paths):
 
         except Exception as e:
             log.error(f"Invalid CSV format for {file_path}: {e}")
+            return False
 
     log.info(f"All file paths are valid and non-empty")
+    return True
