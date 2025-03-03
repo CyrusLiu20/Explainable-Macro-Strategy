@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from Utilities.Logger import logger
 
 # Initialize logger
-log = logger("split_config", "logs/split_config.log")
+log = logger("split_config", "Logs/split_config.log")
 
 def split_time_range(time_from, time_to, months=3):
     """Split the time range into three-month intervals."""
