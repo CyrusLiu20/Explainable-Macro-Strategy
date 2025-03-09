@@ -49,9 +49,9 @@ class BaseAgent:
             self.chat_history.append({"role": "user", "content": self.system_prompt})
             final_input_prompt = input_prompt
 
-        # Add the user's input prompt to the chat history
-        self.log.info(self.system_prompt)
-        self.log.info(input_prompt)
+        # # Add the user's input prompt to the chat history
+        # self.log.info(self.system_prompt)
+        # self.log.info(input_prompt)
 
         self.chat_history.append({"role": "user", "content": final_input_prompt})
 

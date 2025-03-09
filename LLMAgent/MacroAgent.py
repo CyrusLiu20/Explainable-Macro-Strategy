@@ -44,15 +44,8 @@ class TradingAgent(BaseAgent):
         self.risk_tolerance = risk_tolerance
         self.has_system_prompt = has_system_prompt
 
-        # Define system message using procoder
-        self.STYLE_PROMPT = NamedBlock(
-            name="System Message",
-            content=textwrap.dedent("""
-                You are analyzing market data and need to make a decision based on the following criteria:
-                - Trading Style: {style}
-                - Risk Tolerance: {risk_tolerance}
-            """)
-        )
+        # Define Risk Tolerance and Style of the Trader
+        self.STYLE_PROMPT = STYLE_PROMPT
         self.SYSTEM_PROMPT = Collection(BACKGROUND_PROMPT, self.STYLE_PROMPT)
 
         # Format the system message
@@ -117,7 +110,7 @@ class TradingAgent(BaseAgent):
 
 
 class FilterAgent(BaseAgent):
-    def __init__(self, name: str, asset: str, logger_name: str = "FilterAgent", model: str = "deepseek-r1:1.5b", has_system_prompt: bool = False):
+    def __init__(self, name: str, asset: str, prompt_num_relevance: str = "1-2", logger_name: str = "FilterAgent", model: str = "deepseek-r1:1.5b", has_system_prompt: bool = False):
         """
         Superclass of LLMAgent for summarizing and selecting impactful news.
 
@@ -127,20 +120,17 @@ class FilterAgent(BaseAgent):
         :param model: The LLM model to use (default: "deepseek-r1:1.5b").
         """
         self.asset = asset
+        self.prompt_num_relevance = prompt_num_relevance
         self.has_system_prompt = has_system_prompt
 
-        # Define the expected output format using NamedBlock
+        # Define the expected output and system prompt
         self.EXPECTED_OUTPUT_PROMPT = EXAMPLE_SUMMARY_PROMPT
-
-        # Combine the system prompt with the expected output format
-        self.SYSTEM_PROMPT = Collection(
-            MACROECONOMIC_NEWS_SELECTION_PROMPT
-        )
+        self.SYSTEM_PROMPT = Collection(MACROECONOMIC_NEWS_SELECTION_PROMPT)
 
         # Format the system message
         system_prompt = format_prompt(
             self.SYSTEM_PROMPT,
-            {"asset": self.asset}
+            {"asset": self.asset, "prompt_num_relevance": self.prompt_num_relevance}
         )
 
         # Initialize the base class
@@ -158,7 +148,7 @@ class FilterAgent(BaseAgent):
         # Format the input prompt
         self.INPUT_PROMPT = Collection(MACROECONOMIC_NEWS_PROMPT,
                                        self.EXPECTED_OUTPUT_PROMPT)
-        input = {"news_entries": news_entries, "asset": self.asset}
+        input = {"news_entries": news_entries, "asset": self.asset, "prompt_num_relevance": self.prompt_num_relevance}
         input_prompt = format_prompt(self.INPUT_PROMPT, input)
 
         # Get raw response from the base class

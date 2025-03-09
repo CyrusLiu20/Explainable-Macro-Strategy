@@ -36,18 +36,19 @@ class NewsDrivenFramework:
 
         for date in date_range:
             # Aggregate data for the current date
-            aggregator = MacroAggregator(
-                news_path=self.config.news_path,
-                asset=self.config.asset,
-                model=self.config.model,
-                output_path=self.config.output_path,
-                macro_csv_list=self.config.macro_csv_list,
-                mapping_csv=self.config.mapping_csv,
-                current_date=date,
-                last_periods_list=self.config.last_periods_list,
-            )
+            # aggregator = MacroAggregator(
+            #     news_path=self.config.news_path,
+            #     asset=self.config.asset,
+            #     model=self.config.model,
+            #     output_path=self.config.output_path,
+            #     macro_csv_list=self.config.macro_csv_list,
+            #     mapping_csv=self.config.mapping_csv,
+            #     current_date=date,
+            #     last_periods_list=self.config.last_periods_list,
+            # )
+            aggregator = MacroAggregator(config=self.config, current_date=date)
 
-            input_prompt = aggregator.aggregate_all(filter_dates=self.config.dates, filter_agent=False)
+            input_prompt = aggregator.aggregate_all(filter_dates=self.config.dates, filter_agent=self.config.filter_agent, chunk_size=self.Config.chunk_size)
 
             # Get trading decision from the agent
             prediction, explanation = self.agent.get_trading_decision(input_prompt)

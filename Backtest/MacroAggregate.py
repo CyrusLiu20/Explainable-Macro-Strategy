@@ -2,6 +2,7 @@ import pandas as pd
 import textwrap
 import sys
 import os
+from dataclasses import dataclass
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from Utilities.Logger import logger
@@ -24,61 +25,56 @@ MACROECONOMIC_NEWS_PROMPT = NamedBlock(
 )
 
 class MacroAggregator:
-    def __init__(self, news_path, asset, model, output_path="filtered_news.csv", verbose=True,
-                 macro_csv_list=None, last_periods_list=None, mapping_csv=None, current_date=None, last_periods=4):
+
+    def __init__(self, config: dataclass, current_date: str):
         """
         Initializes the MacroAggregator.
         
-        :param news_path: Path to the macro news CSV file.
-        :param asset: The asset related to the news.
-        :param model: The model used for filtering news.
-        :param output_path: Path to save the filtered news CSV.
-        :param verbose: Boolean flag to control printing of news details.
-        :param macro_csv_list: List of paths to macro indicator CSV files.
-        :param last_periods_list: List of periods to consider for each macro indicator.
-        :param mapping_csv: Path to the mapping CSV file for macro indicators.
-        :param current_date: The current date for filtering indicators.
-        :param last_periods: Default number of periods to consider for indicators.
+        :param config: An instance of MacroAggregatorConfig containing all parameters.
         """
-        self.news_path = news_path
-        self.asset = asset
-        self.model = model
-        self.output_path = output_path
-        self.verbose = verbose
-        self.macro_csv_list = macro_csv_list or []
-        self.last_periods_list = last_periods_list or []
-        self.mapping_csv = mapping_csv
+        self.config = config
+        self.news_path = config.news_path
+        self.prompt_num_relevance = config.prompt_num_relevance
+        self.asset = config.asset
+        self.model = config.model
+        self.output_path = config.output_path
+        self.verbose = config.verbose
+        self.macro_csv_list = config.macro_csv_list or []
+        self.last_periods_list = config.last_periods_list or []
+        self.mapping_csv = config.mapping_csv
+
         self.current_date = current_date
-        self.agent = FilterAgent(name="FilterAgent", asset=self.asset, model=self.model)
+        self.agent = FilterAgent(name="FilterAgent", asset=self.asset, prompt_num_relevance=self.prompt_num_relevance, model=self.model)
         self.log = logger(name="MacroAggregator", log_file=f"Logs/macro_aggregator.log")
 
-    def aggregate_news(self, filter_dates=None, filter_agent=False, max_retries=3):
+
+    def aggregate_news(self, filter_dates=None, filter_agent=False, max_retries=3, chunk_size=15):
         """
         Loads the filtered news CSV and returns entries matching the given list of dates.
-        If the file is not found or use_aggregation flag is set, aggregate_news_llm is called to fetch data.
+        If filter_agent is True, it calls aggregate_news_llm instead of loading from the file.
 
         :param filter_dates: List of dates to filter the news.
-        :param filter_agent: Flag to control whether to use aggregate_news_llm if file is not found.
+        :param filter_agent: Flag to control whether to use aggregate_news_llm instead of loading from file.
         :param max_retries: Maximum number of retries for failed filtering attempts.
+        :param chunk_size: Number of news items to process in each chunk.
         :return: DataFrame containing filtered news for the specified dates.
         """
+        if filter_agent:
+            self.log.info("Using aggregate_news_llm instead of loading from file...")
+            return self.aggregate_news_llm(filter_dates=filter_dates, max_retries=max_retries, chunk_size=chunk_size)
+
         try:
-            news_chunk = format_macro_news(csv_file=self.output_path, filter_dates=filter_dates, chunk_size=1e1)
+            news_chunk = format_macro_news(csv_file=self.output_path, filter_dates=filter_dates, chunk_size=10)
             self.log.info(f"Loaded filtered news from {self.output_path}")
+            return news_chunk
         except FileNotFoundError:
             self.log.warning(f"File not found: {self.output_path}")
-            if filter_agent:
-                self.log.info("Aggregating news instead, as the file is missing...")
-                return self.aggregate_news_llm(filter_dates=filter_dates, max_retries=max_retries)
-            else:
-                return pd.DataFrame()
         except Exception as e:
             self.log.error(f"Error loading CSV: {e}")
-            return pd.DataFrame()
 
-        return news_chunk
+        return pd.DataFrame()
 
-    def aggregate_news_llm(self, filter_dates, max_retries=3):
+    def aggregate_news_llm(self, filter_dates, max_retries=3, chunk_size=15):
         """
         Processes and concatenates impactful news for all given dates and saves it as a CSV.
 
@@ -87,13 +83,13 @@ class MacroAggregator:
         :return: Concatenated DataFrame of impactful news.
         """
         all_news = []
-        news_chunks = format_macro_news(self.news_path, filter_dates=filter_dates, chunk_size=15)
+        news_chunks = format_macro_news(self.news_path, filter_dates=filter_dates, chunk_size=chunk_size)
 
         for i, chunk in enumerate(news_chunks):
             attempts = 0
             status_flag = False
             impactful_news = pd.DataFrame()
-
+            
             while attempts < max_retries and not status_flag:
                 impactful_news, status_flag = self.agent.filter_news(chunk)
                 attempts += 1
@@ -108,13 +104,8 @@ class MacroAggregator:
                     self.log.info(f"Title: {row['Title']}")
                     self.log.info(f"Relevance: {row['Relevance']}\n")
 
-        self.final_df = pd.concat(all_news, ignore_index=True) if all_news else pd.DataFrame()
-
-        if not self.final_df.empty:
-            self.final_df.to_csv(self.output_path, index=False)
-            self.log.info(f"Filtered news saved to {self.output_path}.")
-        else:
-            self.log.warning("No filtered news to save.")
+        new_df = pd.concat(all_news, ignore_index=True) if all_news else pd.DataFrame()
+        self.save_news_chunks(self.output_path, new_df)
 
         return format_macro_news(self.output_path)
 
@@ -135,7 +126,7 @@ class MacroAggregator:
         return combined_indicator_text
     
 
-    def aggregate_all(self, filter_dates=None, filter_agent=False, max_retries=3):
+    def aggregate_all(self, filter_dates=None, filter_agent=False, max_retries=3, chunk_size=15):
         """
         Combines macro indicators and filtered news into a single aggregated output.
 
@@ -149,7 +140,7 @@ class MacroAggregator:
         indicator_text = self.aggregate_indicators()
         
         # Aggregate news using LLM
-        news_chunk = self.aggregate_news(filter_dates=filter_dates, filter_agent=filter_agent, max_retries=max_retries)
+        news_chunk = self.aggregate_news(filter_dates=filter_dates, filter_agent=filter_agent, max_retries=max_retries, chunk_size=chunk_size)
         news_text = format_prompt(MACROECONOMIC_NEWS_PROMPT,{"current_date": self.current_date, "news_chunk": news_chunk[0]})
 
         # Combine both aggregations
@@ -158,6 +149,39 @@ class MacroAggregator:
         self.log.debug(aggregated_output)
         self.log.info(f"Aggregation complete for {self.current_date}.")
         return aggregated_output
+
+
+    def save_news_chunks(self, output_path, new_df):
+        """
+        Saves the filtered news to the specified output_path. If a file already exists, it merges new entries,
+        removes duplicates, and updates the file. Handles potential format mismatches during merging.
+
+        :param output_path: Path to the output CSV file.
+        :param new_df: DataFrame containing the newly filtered news.
+        """
+        if os.path.exists(output_path):
+            try:
+                existing_df = pd.read_csv(output_path)
+                self.log.info(f"Loaded existing news data from {output_path}.")
+            except Exception as e:
+                self.log.error(f"Error loading existing CSV: {e}")
+                existing_df = pd.DataFrame()
+        else:
+            existing_df = pd.DataFrame()
+
+        try:
+            # Attempt to merge new and existing data, remove duplicates
+            combined_df = pd.concat([existing_df, new_df], ignore_index=True).drop_duplicates()
+        except Exception as e:
+            self.log.error(f"Error merging new and existing news data: {e}")
+            self.log.warning("Saving only the new filtered news instead.")
+            combined_df = new_df  # Fall back to saving only the new data
+
+        if not combined_df.empty:
+            combined_df.to_csv(output_path, index=False)
+            self.log.info(f"Updated filtered news saved to {output_path}.")
+        else:
+            self.log.warning("No filtered news to save.")
 
 
 log = logger(name="FileChecker", log_file=f"Logs/file_checker.log")
