@@ -73,7 +73,8 @@ class TradingAgent(BaseAgent):
         """
         # Get raw response from the base class
         input_prompt = f"{input_prompt}\n\n{self.example_prompt}"
-        raw_response, status = self.response(input_prompt, self.has_system_prompt)
+        # raw_response, status = self.response(input_prompt, self.has_system_prompt)
+        raw_response, status = self.response_chat(input_prompt, self.has_system_prompt)
         self.log.info(raw_response)
 
         if status != "Success":
@@ -152,7 +153,8 @@ class FilterAgent(BaseAgent):
         input_prompt = format_prompt(self.INPUT_PROMPT, input)
 
         # Get raw response from the base class
-        raw_response, status = self.response(input_prompt, has_system_prompt=self.has_system_prompt)
+        # raw_response, status = self.response(input_prompt, has_system_prompt=self.has_system_prompt)
+        raw_response, status = self.response_chat(input_prompt, has_system_prompt=self.has_system_prompt)
 
         if status != "Success":
             self.log.error(f"Failed to get response from LLM: {status}")

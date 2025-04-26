@@ -2,6 +2,7 @@ import ollama
 import subprocess
 import time
 import pandas as pd
+import requests
 import re
 import sys
 import os
@@ -97,6 +98,62 @@ class BaseAgent:
         except ValueError as e:
             self.log.error(f"Input exceeded token limit: {e}")
             return "", "Input too long. Reduce the size of your query."
+
+        except Exception as e:
+            self.log.error(f"Unexpected error during LLM response processing: {e}")
+            return "", "An unexpected error occurred."
+
+
+    def response_chat(self, input_prompt: str, has_system_prompt: bool) -> tuple[str, str]:
+        """
+        Handles chat interaction with the DeepSeek API, returning the raw response.
+
+        :param input_prompt: The user's input prompt.
+        :param has_system_prompt: Whether the model supports system prompts.
+        :return: A tuple containing the raw response and a status message.
+        """
+        # Prepare the chat history and input prompt based on model capabilities
+        chat_history, final_input_prompt = self._prepare_prompt(input_prompt, has_system_prompt)
+
+        # Prepare messages in DeepSeek format
+        messages = chat_history  # Assuming chat_history is already in [{"role": ..., "content": ...}] format
+
+        url = "https://api.deepseek.com/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {os.environ.get('DEEPSEEK_API_KEY')}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": self.model,  # e.g., "deepseek-chat" or "deepseek-coder"
+            "messages": messages,
+            "temperature": 0.7,  # adjust if you want
+        }
+
+        self.log.info(f"Sending request to {self.name}...")
+
+        try:
+            response = requests.post(url, headers=headers, json=payload)
+
+            if response.status_code != 200:
+                self.log.error(f"API Error {response.status_code}: {response.text}")
+                return "", f"API Error {response.status_code}"
+
+            response_json = response.json()
+
+            if "choices" not in response_json or not response_json["choices"]:
+                self.log.error("Invalid response format from DeepSeek API.")
+                return "", "Invalid response format."
+
+            response_content = response_json["choices"][0]["message"]["content"]
+
+            # Store assistant's response
+            self.chat_history.append({"role": "assistant", "content": response_content})
+
+            return response_content, "Success"
+
+        except requests.exceptions.RequestException as e:
+            self.log.error(f"Request error: {e}")
+            return "", "Network error or API unreachable."
 
         except Exception as e:
             self.log.error(f"Unexpected error during LLM response processing: {e}")

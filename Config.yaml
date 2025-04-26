@@ -3,16 +3,16 @@
 # Macro News Aggregation Parameters
 macro_news_aggregation:
   max_retries: 3                   # Maximum number of retries for the FilterAgent
-  chunk_size: 15                   # Discretize news chunks within the date range
-  verbose: true                    # Whether to print out the relevant news in news aggregation
-  filter_agent: true               # Whether to use LLM for news filtering (or import from CSV)
+  chunk_size: 20                   # Discretize news chunks within the date range
+  verbose: False                    # Whether to print out the relevant news in news aggregation
+  filter_agent: True               # Whether to use LLM for news filtering (True if no aggregated news available)
   prompt_num_relevance: "1-2"      # Number of relevant news to select in each chunk
 
 # Backtesting Configuration Parameters
 backtest:
   asset: "US 10-year Treasury bonds"  # Asset for backtesting
-  model: "deepseek-r1:8b"             # Model to be used in the backtest
-  has_system_prompt: false            # Whether the LLM model includes a system message
+  model: "deepseek-chat"             # Model to be used in the backtest
+  has_system_prompt: False            # Whether the LLM model includes a system message
   ticker: "IEF"                       # Ticker symbol of the asset
 
 # File Paths and Data Management
@@ -29,12 +29,17 @@ file_paths:
 
 # Backtest Date Configuration
 dates:
-  - "2022-04-02"  # Start Date
-  - "2022-04-03"  # End Date
+  - "2022-12-01"  # Start Date
+  - "2022-12-02"  # End Date
 
 # Formatting Macro Indicator Prompt
 last_periods:
-  daily: 10    # Number of periods for daily data
-  weekly: 4    # Number of periods for weekly data
-  monthly: 6   # Number of periods for monthly data
-  quarterly: 4 # Number of periods for quarterly data
+  # daily: 10    # Number of periods for daily data
+  # weekly: 4    # Number of periods for weekly data
+  # monthly: 6   # Number of periods for monthly data
+  # quarterly: 4 # Number of periods for quarterly data
+
+  - 10    # Number of periods for daily data
+  - 4    # Number of periods for weekly data
+  - 6   # Number of periods for monthly data
+  - 4 # Number of periods for quarterly data

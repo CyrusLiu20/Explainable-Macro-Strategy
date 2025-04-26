@@ -1,9 +1,10 @@
 import pandas as pd
+import time
 
 from Backtest import MacroAggregator
 from LLMAgent import TradingAgent
 from LLMAgent.InstructionPrompt import *
-
+from Utilities import logger
 
 class NewsDrivenFramework:
     """A framework for backtesting trading strategies driven by news and macroeconomic data."""
@@ -21,8 +22,9 @@ class NewsDrivenFramework:
             risk_tolerance="medium",
             has_system_prompt = self.config.has_system_prompt,
         )
+        self.log = logger(name="NewsDrivenFramework", log_file=f"Logs/backtest.log")
 
-    def backtest(self, date_range):
+    def backtest(self):
         """Run a backtest over the specified date range.
 
         Args:
@@ -34,24 +36,25 @@ class NewsDrivenFramework:
         """
         results = []
 
+        date_range = pd.date_range(start=self.config.dates[0], end=self.config.dates[1])
         for date in date_range:
+
             # Aggregate data for the current date
-            # aggregator = MacroAggregator(
-            #     news_path=self.config.news_path,
-            #     asset=self.config.asset,
-            #     model=self.config.model,
-            #     output_path=self.config.output_path,
-            #     macro_csv_list=self.config.macro_csv_list,
-            #     mapping_csv=self.config.mapping_csv,
-            #     current_date=date,
-            #     last_periods_list=self.config.last_periods_list,
-            # )
+            self.log.info(f"Running backtest for date: {date}")
             aggregator = MacroAggregator(config=self.config, current_date=date)
 
-            input_prompt = aggregator.aggregate_all(filter_dates=self.config.dates, filter_agent=self.config.filter_agent, chunk_size=self.Config.chunk_size)
+            input_prompt = aggregator.aggregate_all(filter_dates=[date], filter_agent=self.config.filter_agent, chunk_size=self.config.chunk_size)
 
             # Get trading decision from the agent
+            start_time = time.time()
             prediction, explanation = self.agent.get_trading_decision(input_prompt)
+            elapsed_time = time.time() - start_time
+
+            # Log trading decision
+            self.log.info(f"Prediction: {prediction}")
+            self.log.info(f"Explanation: {explanation}")
+            self.log.info(f"Decision time: {elapsed_time:.2f} seconds")
+
 
             # Store results for the current date
             results.append({"Date": date, "Prediction": prediction, "Explanation": explanation})

@@ -22,6 +22,8 @@ OllamaServe.log
 test.ipynb
 test.py
 test2.py
+test2.ipynb
+
 
 # macOS specific file to ignore
 *.DS_Store
