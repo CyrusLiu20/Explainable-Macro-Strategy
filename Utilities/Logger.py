@@ -69,4 +69,13 @@ def logger(name, log_file, level=logging.DEBUG):
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
 
+    # Custom log method with skip_lines option
+    def custom_info(message, *args, skip_lines=False, **kwargs):
+        if skip_lines:
+            print("\n" * 4, end="")  # Print two blank lines before logging
+        logger._log(logging.INFO, message, args, **kwargs)
+
+    # Replace the default info method with custom_info
+    logger.info = custom_info
+
     return logger
