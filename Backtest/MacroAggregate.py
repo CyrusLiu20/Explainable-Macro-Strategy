@@ -61,7 +61,6 @@ class MacroAggregator:
         """
         if filter_agent:
             self.log.info("Using aggregate_news_llm instead of loading from file...")
-            print(filter_dates)
             return self.aggregate_news_llm(filter_dates=filter_dates, max_retries=max_retries, chunk_size=chunk_size)
 
         try:
@@ -92,7 +91,6 @@ class MacroAggregator:
             impactful_news = pd.DataFrame()
             
             while attempts < max_retries and not status_flag:
-                self.log.info()
                 impactful_news, status_flag = self.agent.filter_news(chunk)
                 attempts += 1
                 if not status_flag:

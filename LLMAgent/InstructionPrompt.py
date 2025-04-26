@@ -7,7 +7,7 @@ import ast
 import pandas as pd
 import matplotlib.pyplot as plt
 
-prompt_logger = logger(name="PromptLogger", log_file="Logs/prompt_logger.log")
+prompt_logger = logger(name="PromptLogger", log_file="Logs/backtest.log")
 
 # Define the background of a quant macro trader
 BACKGROUND_PROMPT = NamedBlock(
