@@ -36,7 +36,7 @@ def write_mapping(folder_path=None, output_filename="indicator_mapping.csv"):
         ("DEXUSUK",         "GBP/USD",                      0,      "Daily")
     ]
 
-    log = logger(name="IndicatorMapper", log_file="Logs/indicator_mapper.log")
+    log = logger(name="IndicatorMapper", log_file="Logs/scraper.log")
     file_path = os.path.join(folder_path,output_filename)
     with open(file_path, mode="w", newline='') as file:
         writer = csv.writer(file)

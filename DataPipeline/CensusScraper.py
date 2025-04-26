@@ -5,7 +5,7 @@ import json
 from Utilities.Logger import logger  # Import the custom logger
 
 class CensusDataScraper:
-    def __init__(self, api_key=None, config_file="datasets_config.json", log_file="census_scraper.log"):
+    def __init__(self, api_key=None, config_file="datasets_config.json", log_file="scraper.log"):
         """
         Initialize the scraper with an API key and a configuration file for datasets.
         :param api_key: API key for Census API.

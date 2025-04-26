@@ -34,6 +34,7 @@ class NewsDrivenFramework:
             pd.DataFrame: A DataFrame containing the backtest results with columns:
                            ["Date", "Prediction", "Explanation"].
         """
+        open("Logs/backtest.log", "w").close()
         results = []
 
         date_range = pd.date_range(start=self.config.dates[0], end=self.config.dates[1])

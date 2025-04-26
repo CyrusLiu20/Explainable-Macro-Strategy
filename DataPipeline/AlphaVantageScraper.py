@@ -6,7 +6,7 @@ import json
 from Utilities.Logger import logger  # Assuming you have a custom logger utility.
 
 class AlphaVantageScraper:
-    def __init__(self, api_key=None, config_file="alpha_vantage_config.json", log_file="alpha_vantage_scraper.log"):
+    def __init__(self, api_key=None, config_file="alpha_vantage_config.json", log_file="scraper.log"):
         """
         Initialize the scraper with an API key for Alpha Vantage API.
         :param api_key: API key for Alpha Vantage. If not provided, it will be fetched from environment variables.

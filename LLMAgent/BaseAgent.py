@@ -16,7 +16,7 @@ from Utilities.Logger import logger
 from LLMAgent.InstructionPrompt import *
 
 class BaseAgent:
-    def __init__(self, name: str, logger_name: str = "Agent", model: str = "deepseek-r1:1.5b", system_prompt: str = ""):
+    def __init__(self, name: str, logger_name: str = "base_agent", model: str = "deepseek-r1:1.5b", system_prompt: str = ""):
         """
         Base class for an LLM-based agent.
 

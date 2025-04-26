@@ -45,7 +45,7 @@ class MacroAggregator:
 
         self.current_date = current_date
         self.agent = FilterAgent(name="FilterAgent", asset=self.asset, prompt_num_relevance=self.prompt_num_relevance, model=self.model)
-        self.log = logger(name="MacroAggregator", log_file=f"Logs/macro_aggregator.log")
+        self.log = logger(name="MacroAggregator", log_file=f"Logs/backtest.log")
 
 
     def aggregate_news(self, filter_dates=None, filter_agent=False, max_retries=3, chunk_size=15):
@@ -188,7 +188,7 @@ class MacroAggregator:
             self.log.warning("No filtered news to save.")
 
 
-log = logger(name="FileChecker", log_file=f"Logs/file_checker.log")
+log = logger(name="FileChecker", log_file=f"Logs/backtest.log")
 
 def check_file_paths(file_paths):
     """

@@ -6,7 +6,7 @@ from fredapi import Fred
 from Utilities.Logger import logger
 
 class FredDataScraper:
-    def __init__(self, api_key=None, config_file="fred_config.json", log_file="fred_scraper.log"):
+    def __init__(self, api_key=None, config_file="fred_config.json", log_file="scraper.log"):
         """
         Initialize the scraper with an API key for the FRED API.
         :param api_key: API key for the FRED API. If not provided, it will be fetched from environment variables.
