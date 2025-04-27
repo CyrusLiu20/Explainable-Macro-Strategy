@@ -1,5 +1,6 @@
 from .Logger import logger
-from .ConfigLoader import load_config
+from .ConfigLoader import BacktestConfigurationLoader, filter_valid_kwargs
 
 __all__ = ["logger",
-           "load_config"]
+           "BacktestConfigurationLoader",
+           "filter_valid_kwargs",]

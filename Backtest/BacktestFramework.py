@@ -23,22 +23,39 @@ def sentiment_to_decision(prediction):
 
 
 class NewsDrivenFramework:
-    """A framework for backtesting trading strategies driven by news and macroeconomic data."""
+    def __init__(self, dates: list, filter_agent: bool, chunk_size: int, asset: str, 
+                 ticker: str, model: str, has_system_prompt: bool, aggregator: MacroAggregator):
+        """Initialize the framework with the given parameters."""
+        self.asset = asset
+        self.ticker = ticker
+        self.model = model
+        self.dates = dates
+        self.filter_agent = filter_agent
+        self.chunk_size = chunk_size
+        self.has_system_prompt = has_system_prompt
 
-    def __init__(self, config):
-        """Initialize the framework with the given configuration."""
-        self.config = config
+        self.aggregator = aggregator
+
+        self.name = "NewsDrivenAgent"
+        self.logger_name = "backtest"
+        self.style = "risk_neutral"
+        self.risk_tolerance = "medium"
+
+        # Decision making agent
         self.agent = TradingAgent(
-            asset=self.config.asset,
-            ticker=self.config.ticker,
-            name="NewsDrivenAgent",
-            logger_name="backtest",
-            model=self.config.model,
-            style="risk_neutral",
-            risk_tolerance="medium",
-            has_system_prompt = self.config.has_system_prompt,
+            asset=self.asset,
+            ticker=self.ticker,
+            name=self.name,
+            logger_name=self.logger_name,
+            model=self.model,
+            style=self.style,
+            risk_tolerance=self.risk_tolerance,
+            has_system_prompt=self.has_system_prompt,
         )
+
+        # Set up logging
         self.log = logger(name="NewsDrivenFramework", log_file=f"Logs/backtest.log")
+
 
     def backtest(self):
         """Run a backtest over the specified date range.
@@ -53,22 +70,22 @@ class NewsDrivenFramework:
         open("Logs/backtest.log", "w").close()
         results = []
 
-        date_range = pd.date_range(start=self.config.dates[0], end=self.config.dates[1])
+        date_range = pd.date_range(start=self.dates[0], end=self.dates[1])
         for date in date_range:
 
             ########################################### Aggregate data for the current date ###########################################
             self.log.info(f"Running backtest for date: {date}", skip_lines=True)
-            aggregator = MacroAggregator(config=self.config, current_date=date)
 
             # Measure aggregation time
             self.log.info(f"Aggregating data for {date.strftime('%Y-%m-%d')}...")
             self.log.info(f"{'-'*100}")
             aggregation_start_time = time.time()
             
-            input_prompt = aggregator.aggregate_all(
+            self.aggregator.set_current_date(current_date=date) # To filter only the current date
+            input_prompt = self.aggregator.aggregate_all(
                 filter_dates=[date],
-                filter_agent=self.config.filter_agent,
-                chunk_size=self.config.chunk_size
+                filter_agent=self.filter_agent,
+                chunk_size=self.chunk_size
             )
             
             aggregation_elapsed_time = time.time() - aggregation_start_time

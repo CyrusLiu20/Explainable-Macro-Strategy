@@ -2,35 +2,81 @@ import yaml
 from pathlib import Path
 from dataclasses import dataclass, field
 import pandas as pd
+import inspect
 
-# Define the BacktestConfig dataclass
-@dataclass
-class BacktestConfig:
-    # Macro News Aggregation Parameters
-    max_retries: int
-    chunk_size: int
-    verbose: bool
-    filter_agent: bool
-    prompt_num_relevance: str
 
-    # Backtesting Configuration Parameters
-    asset: str
-    model: str
-    has_system_prompt: bool
-    ticker: str
+def filter_valid_kwargs(cls, kwargs):
+    """
+    Filter out unexpected keyword arguments for a class's __init__ method.
 
-    # File Paths and Data Management
-    data_root: Path
-    output_path: Path
-    dates: list
-    last_periods_list: list
+    Args:
+    - cls: The class to inspect.
+    - kwargs (dict): Dictionary of keyword arguments.
 
-    # These fields depend on `data_root`, so they should be set in __post_init__
-    news_path: Path = field(init=False)
-    mapping_csv: Path = field(init=False)
-    macro_csv_list: list = field(init=False)
+    Returns:
+    - dict: A dictionary containing only valid keyword arguments for the class's __init__ method.
+    """
+    # Get the parameters of the class's __init__ method
+    init_params = inspect.signature(cls.__init__).parameters
+    
+    # Filter kwargs to include only valid parameters
+    valid_kwargs = {
+        key: value for key, value in kwargs.items()
+        if key in init_params
+    }
+    
+    return valid_kwargs
 
-    def __post_init__(self):
+
+class BaseConfigLoader:
+    def __init__(self, config_path):
+        """
+        Base class for loading and processing YAML configuration files.
+
+        Args:
+        - config_path (str or Path): Path to the configuration YAML file.
+        """
+        self.config_path = Path(config_path)
+        self.config = self._load_config()
+        self._extract_sections()
+
+    def _load_config(self):
+        """Load YAML configuration file."""
+        try:
+            with open(self.config_path, "r") as file:
+                return yaml.safe_load(file)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Configuration file not found: {self.config_path}")
+        except yaml.YAMLError as e:
+            raise ValueError(f"Error parsing YAML file: {e}")
+
+    def _extract_sections(self):
+        """Extract top-level configurations dynamically."""
+        for section, value in self.config.items():
+            setattr(self, section, value)
+
+    def _extract_attributes(self, config_section):
+        """Dynamically extract attributes from a configuration section."""
+        for key, value in config_section.items():
+            setattr(self, key, value)
+
+    def get_config(self):
+        """Return all configuration parameters as a dictionary."""
+        return {key: value for key, value in vars(self).items()}
+    
+
+class BacktestConfigurationLoader(BaseConfigLoader):
+
+    def __init__(self, config_path):
+        """Derived class for openfoam-specific configurations."""
+        super().__init__(config_path)
+        
+        # Extract second level attributes
+        self._extract_attributes(self.macro_news_aggregation)
+        self._extract_attributes(self.backtest)
+        self._extract_attributes(self.file_paths)
+
+        self.data_root = Path(self.data_root)
         self.news_path = self.data_root / "ProcessedData/MacroNews.csv"
         self.mapping_csv = self.data_root / "MacroIndicators/indicator_mapping.csv"
         self.macro_csv_list = [
@@ -39,27 +85,3 @@ class BacktestConfig:
             self.data_root / "ProcessedData/MacroIndicatorMonthly.csv",
             self.data_root / "ProcessedData/MacroIndicatorQuarterly.csv"
         ]
-
-def load_config(config_file_path: str) -> BacktestConfig:
-    # Open the YAML file and load its contents
-    with open(config_file_path, "r") as file:
-        config_data = yaml.safe_load(file)
-
-    # Map the loaded data to the BacktestConfig dataclass
-    backtest_config = BacktestConfig(
-        max_retries=config_data['macro_news_aggregation']['max_retries'],
-        chunk_size=config_data['macro_news_aggregation']['chunk_size'],
-        verbose=config_data['macro_news_aggregation']['verbose'],
-        filter_agent=config_data['macro_news_aggregation']['filter_agent'],
-        prompt_num_relevance=config_data['macro_news_aggregation']['prompt_num_relevance'],
-        asset=config_data['backtest']['asset'],
-        model=config_data['backtest']['model'],
-        has_system_prompt=config_data['backtest']['has_system_prompt'],
-        ticker=config_data['backtest']['ticker'],
-        data_root=Path(config_data['file_paths']['data_root']),
-        output_path=Path(config_data['file_paths']['output_path']),
-        dates=config_data['dates'],
-        last_periods_list=config_data['last_periods']
-    )
-
-    return backtest_config

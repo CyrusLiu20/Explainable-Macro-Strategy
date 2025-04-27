@@ -26,27 +26,29 @@ MACROECONOMIC_NEWS_PROMPT = NamedBlock(
 
 class MacroAggregator:
 
-    def __init__(self, config: dataclass, current_date: str):
+    def __init__(self, news_path: str, prompt_num_relevance: str, asset: str, model: str, 
+                 output_path: str, verbose: bool, macro_csv_list: list, 
+                 last_periods_list: list, mapping_csv: str):
         """
         Initializes the MacroAggregator.
         
         :param config: An instance of MacroAggregatorConfig containing all parameters.
         """
-        self.config = config
-        self.news_path = config.news_path
-        self.prompt_num_relevance = config.prompt_num_relevance
-        self.asset = config.asset
-        self.model = config.model
-        self.output_path = config.output_path
-        self.verbose = config.verbose
-        self.macro_csv_list = config.macro_csv_list or []
-        self.last_periods_list = config.last_periods_list or []
-        self.mapping_csv = config.mapping_csv
-
-        self.current_date = current_date
+        self.news_path = news_path
+        self.prompt_num_relevance = prompt_num_relevance
+        self.asset = asset
+        self.model = model
+        self.output_path = output_path
+        self.verbose = verbose
+        self.macro_csv_list = macro_csv_list
+        self.last_periods_list = last_periods_list
+        self.mapping_csv = mapping_csv
         self.agent = FilterAgent(name="FilterAgent", asset=self.asset, prompt_num_relevance=self.prompt_num_relevance, model=self.model)
         self.log = logger(name="MacroAggregator", log_file=f"Logs/backtest.log")
 
+    # Function must be run before other aggregation functions
+    def set_current_date(self, current_date):
+        self.current_date = current_date
 
     def aggregate_news(self, filter_dates=None, filter_agent=False, max_retries=3, chunk_size=15):
         """
