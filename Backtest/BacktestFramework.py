@@ -102,24 +102,31 @@ class NewsDrivenFramework:
         return results
 
     def backtest(self):
-        """Run a backtest over the specified date range with multiprocessing."""
+        """Run a backtest over the specified date range with optional multiprocessing."""
         open("Logs/backtest.log", "w").close()
         results = []
 
         date_range = pd.date_range(start=self.dates[0], end=self.dates[1])
 
-        # Set up a pool of workers for parallel execution
-        with multiprocessing.Pool(processes=self.num_processes) as pool:
-            # Distribute the work across multiple processes
-            results = pool.starmap(self.single_day_backtest, [
-                (date, self.aggregator, self.filter_agent, self.chunk_size, self.agent) 
-                for date in date_range
-            ])
+        self.log.info(f"Starting backtesting with {self.num_processes} processes")
+
+        if self.num_processes == 1:
+            # Serial processing
+            for date in date_range:
+                day_results = self.single_day_backtest(date, self.aggregator, self.filter_agent, self.chunk_size, self.agent)
+                results.append(day_results)
+        else:
+            # Parallel processing
+            with multiprocessing.Pool(processes=self.num_processes) as pool:
+                results = pool.starmap(self.single_day_backtest, [
+                    (date, self.aggregator, self.filter_agent, self.chunk_size, self.agent) 
+                    for date in date_range
+                ])
 
         # Flatten the list of results and convert to DataFrame
         flat_results = [item for sublist in results for item in sublist]
         results_df = pd.DataFrame(flat_results, columns=["Date", "Prediction", "Decision", "Explanation"])
-        
+
         self.save_results(results_df)
 
         return results_df
