@@ -1,4 +1,5 @@
 import pandas as pd
+import random
 import textwrap
 import sys
 import os
@@ -72,17 +73,24 @@ class MacroAggregator:
             return self.aggregate_news_llm(filter_dates=filter_dates, max_retries=max_retries, chunk_size=chunk_size)
 
         try:
-            news_chunk = format_macro_news(csv_file=self.output_path, filter_dates=filter_dates, chunk_size=10)
+            news_chunk, num_news = format_macro_news(csv_file=self.output_path, filter_dates=filter_dates, chunk_size=chunk_size)
             self.log.info(f"Loaded filtered news from {self.output_path}")
-            return news_chunk
+
+            # Check if news_chunk is empty or has zero length, use aggregate_news_llm if true
+            if len(news_chunk) == 0:
+                self.log.info("News chunk is empty or has zero length, using aggregate_news_llm...")
+                return self.aggregate_news_llm(filter_dates=filter_dates, max_retries=max_retries, chunk_size=chunk_size)
+
+            return news_chunk, num_news
         except FileNotFoundError:
             self.log.warning(f"File not found: {self.output_path}")
         except Exception as e:
             self.log.error(f"Error loading CSV: {e}")
 
-        return pd.DataFrame()
+        return pd.DataFrame(), num_news
 
-    def aggregate_news_llm(self, filter_dates, max_retries=3, chunk_size=15):
+
+    def aggregate_news_llm(self, filter_dates, max_retries=3, chunk_size=15, max_chunks=10):
         """
         Processes and concatenates impactful news for all given dates and saves it as a CSV.
 
@@ -91,7 +99,12 @@ class MacroAggregator:
         :return: Concatenated DataFrame of impactful news.
         """
         all_news = []
-        news_chunks = format_macro_news(self.news_path, filter_dates=filter_dates, chunk_size=chunk_size)
+        news_chunks, num_news = format_macro_news(self.news_path, filter_dates=filter_dates, chunk_size=chunk_size)
+
+        # Cap the number of news chunks to reduce LLM load
+        if len(news_chunks) > max_chunks:
+            self.log.warning(f"Capping number of news chunks from {len(news_chunks)} to {max_chunks} to reduce LLM load.")
+            news_chunks = random.sample(news_chunks, max_chunks)
 
         for i, chunk in enumerate(news_chunks):
             attempts = 0
@@ -117,7 +130,7 @@ class MacroAggregator:
         new_df = pd.concat(all_news, ignore_index=True) if all_news else pd.DataFrame()
         self.save_news_chunks(self.output_path, new_df)
 
-        return format_macro_news(self.output_path)
+        return format_macro_news(self.output_path), len(new_df)
 
 
     def aggregate_indicators(self):
@@ -150,14 +163,14 @@ class MacroAggregator:
         indicator_text = self.aggregate_indicators()
         
         # Aggregate news using LLM
-        news_chunk = self.aggregate_news(filter_dates=filter_dates, filter_agent=filter_agent, max_retries=max_retries, chunk_size=chunk_size)
+        news_chunk, num_news = self.aggregate_news(filter_dates=filter_dates, filter_agent=filter_agent, max_retries=max_retries, chunk_size=chunk_size)
         news_text = format_prompt(MACROECONOMIC_NEWS_PROMPT,{"current_date": self.current_date, "news_chunk": news_chunk[0]})
 
         # Combine both aggregations
         aggregated_output = f"Macro Indicators:\n{indicator_text}\n\n{news_text}"
         
         self.log.debug(aggregated_output)
-        self.log.info(f"Aggregation complete for {self.current_date}.")
+        self.log.info(f"Aggregation complete for {self.current_date} with {num_news} news entries selected")
         return aggregated_output
 
 

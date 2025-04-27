@@ -161,7 +161,7 @@ def format_macro_news(csv_file, filter_dates=None, chunk_size=10):
     if chunk:
         news_chunks.append('\n\n'.join(chunk))
     
-    return news_chunks
+    return news_chunks, num_news
 
 
 def format_macro_indicator(macro_csv, mapping_csv, current_date, last_periods=4):
