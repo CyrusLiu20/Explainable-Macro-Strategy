@@ -27,7 +27,7 @@ def sentiment_to_decision(prediction):
 
 class NewsDrivenFramework:
 
-    def __init__(self, dates: list, filter_agent: bool, chunk_size: int, asset: str, 
+    def __init__(self, dates: list, filter_agent: bool, chunk_size: int, num_processes: int, asset: str, 
                  ticker: str, model_aggregate: str, model_trading: str, trading_system_prompt: bool, 
                  results_path: str, aggregator: MacroAggregator):
         """Initialize the framework with the given parameters."""
@@ -38,6 +38,7 @@ class NewsDrivenFramework:
         self.dates = dates
         self.filter_agent = filter_agent
         self.chunk_size = chunk_size
+        self.num_processes = num_processes
         self.trading_system_prompt = trading_system_prompt
         self.results_path = results_path
 
@@ -108,7 +109,7 @@ class NewsDrivenFramework:
         date_range = pd.date_range(start=self.dates[0], end=self.dates[1])
 
         # Set up a pool of workers for parallel execution
-        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        with multiprocessing.Pool(processes=self.num_processes) as pool:
             # Distribute the work across multiple processes
             results = pool.starmap(self.single_day_backtest, [
                 (date, self.aggregator, self.filter_agent, self.chunk_size, self.agent) 
@@ -124,8 +125,22 @@ class NewsDrivenFramework:
         return results_df
     
 
+    # Concatenate new results to the old results csv (duplicate entries will be replaced)
     def save_results(self, df: pd.DataFrame):
-
         os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
-        df.to_csv(self.results_path, index=False)
-        self.log.info(f"Results saved to {self.results_path}")
+        
+        if os.path.exists(self.results_path) and os.path.getsize(self.results_path) > 0:
+            existing_df = pd.read_csv(self.results_path)
+            
+            # Ensure 'Date' is of type datetime in both DataFrames
+            existing_df['Date'] = pd.to_datetime(existing_df['Date'])
+            df['Date'] = pd.to_datetime(df['Date'])
+            
+            merged_df = pd.concat([existing_df, df]).drop_duplicates(subset=["Date"], keep="last")
+            merged_df = merged_df.sort_values(by="Date")
+            merged_df.to_csv(self.results_path, index=False)
+            self.log.info(f"Results updated and saved to {self.results_path}")
+        else:
+            df.to_csv(self.results_path, index=False)
+            self.log.info(f"Results saved to {self.results_path}")
+
