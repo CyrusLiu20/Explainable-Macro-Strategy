@@ -12,10 +12,13 @@ macro_news_aggregation:
 # Backtesting Configuration Parameters
 backtest:
   asset:                                        "US 10-year Treasury bonds"    # Asset for backtesting
-  model_aggregate:                              "deepseek-chat"                # LLM Model to be used in the backtest
-  model_trading:                                "deepseek-reasoner"                  # LLM model to be used for trading decision
-  has_system_prompt:                            False                          # Whether the LLM model includes a system message
   ticker:                                       "IEF"                          # Ticker symbol of the asset
+
+  model_aggregate:                              "deepseek-chat"                # LLM Model to be used in the backtest
+  aggregate_system_prompt:                      False                          # Whether the Aggregate LLM model includes a system message
+
+  model_trading:                                "deepseek-reasoner"            # LLM model to be used for trading decision
+  trading_system_prompt:                      True                          # Whether the Aggregate LLM model includes a system message
 
 # File Paths and Data Management
 file_paths:
@@ -34,7 +37,7 @@ file_paths:
 # Backtest Date Configuration
 dates:
   - "2022-12-01"  # Start Date
-  - "2022-12-02"  # End Date
+  - "2022-12-01"  # End Date
 
 # Formatting Macro Indicator Prompt
 last_periods_list:

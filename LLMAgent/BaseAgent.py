@@ -56,10 +56,6 @@ class BaseAgent:
             self.chat_history.append({"role": "user", "content": self.system_prompt})
             final_input_prompt = input_prompt
 
-        # # Add the user's input prompt to the chat history
-        # self.log.info(self.system_prompt)
-        # self.log.info(input_prompt)
-
         self.chat_history.append({"role": "user", "content": final_input_prompt})
 
         return self.chat_history, final_input_prompt
@@ -122,8 +118,7 @@ class BaseAgent:
         chat_history, final_input_prompt = self._prepare_prompt(input_prompt, has_system_prompt)
 
         # Prepare messages in DeepSeek format
-        messages = chat_history  # Assuming chat_history is already in [{"role": ..., "content": ...}] format
-
+        messages = chat_history
         payload = {
             "model": self.model,
             "messages": messages,
