@@ -119,6 +119,7 @@ EXAMPLE_SUMMARY_PROMPT = NamedBlock(
 def format_macro_news(csv_file, filter_dates=None, chunk_size=10):
     # Read CSV file
     df = pd.read_csv(csv_file)
+    df = df.drop_duplicates()
 
     # Convert 'Date' column to datetime format
     df['Date'] = pd.to_datetime(df['Date'])

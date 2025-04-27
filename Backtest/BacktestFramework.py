@@ -1,5 +1,6 @@
 import pandas as pd
 import time
+import os
 
 from Backtest import MacroAggregator
 from LLMAgent import TradingAgent
@@ -24,7 +25,8 @@ def sentiment_to_decision(prediction):
 
 class NewsDrivenFramework:
     def __init__(self, dates: list, filter_agent: bool, chunk_size: int, asset: str, 
-                 ticker: str, model: str, has_system_prompt: bool, aggregator: MacroAggregator):
+                 ticker: str, model: str, has_system_prompt: bool, results_path: str,
+                 aggregator: MacroAggregator):
         """Initialize the framework with the given parameters."""
         self.asset = asset
         self.ticker = ticker
@@ -33,6 +35,7 @@ class NewsDrivenFramework:
         self.filter_agent = filter_agent
         self.chunk_size = chunk_size
         self.has_system_prompt = has_system_prompt
+        self.results_path = results_path
 
         self.aggregator = aggregator
 
@@ -74,7 +77,7 @@ class NewsDrivenFramework:
         for date in date_range:
 
             ########################################### Aggregate data for the current date ###########################################
-            self.log.info(f"Running backtest for date: {date}", skip_lines=True)
+            self.log.info(f"Running backtest for date: [{date}]", skip_lines=True)
 
             # Measure aggregation time
             self.log.info(f"Aggregating data for {date.strftime('%Y-%m-%d')}...")
@@ -109,5 +112,14 @@ class NewsDrivenFramework:
             # Store results for the current date
             results.append({"Date": date, "Prediction": prediction, "Decision": decision, "Explanation": explanation})
 
-        # Convert results to a DataFrame
-        return pd.DataFrame(results, columns=["Date", "Prediction", "Explanation"])
+        results_df = pd.DataFrame(results, columns=["Date", "Prediction", "Decision", "Explanation"])
+        self.save_results(results_df)
+
+        return results_df
+    
+    
+    def save_results(self, df: pd.DataFrame):
+
+        os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
+        df.to_csv(self.results_path, index=False)
+        self.log.info(f"Results saved to {self.results_path}")

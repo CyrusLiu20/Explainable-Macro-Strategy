@@ -77,6 +77,7 @@ class BacktestConfigurationLoader(BaseConfigLoader):
         self._extract_attributes(self.file_paths)
 
         self.data_root = Path(self.data_root)
+        self.results_path = Path(self.results_path)
         self.news_path = self.data_root / "ProcessedData/MacroNews.csv"
         self.mapping_csv = self.data_root / "MacroIndicators/indicator_mapping.csv"
         self.macro_csv_list = [

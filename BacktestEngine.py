@@ -27,7 +27,7 @@ def main(backtest: bool):
       backtest_kwargs = filter_valid_kwargs(NewsDrivenFramework, backtest_config)
       news_driven_framework = NewsDrivenFramework(aggregator=aggregator, **backtest_kwargs)
       backtest_results = news_driven_framework.backtest()
-
+   
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run macro data aggregation")
     parser.add_argument("--backtest", action="store_true", default=False, help="Run Backtest Framework")

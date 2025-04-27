@@ -11,8 +11,11 @@ Logs/
 */__pycache__/
 *.pyc
 
-# CSV files
+# CSV files 
 *.csv
+
+# Results folder
+Results/
 
 # Log files
 DownloadTransformer.log
