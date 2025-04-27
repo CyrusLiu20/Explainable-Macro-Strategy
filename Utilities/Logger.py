@@ -3,6 +3,8 @@ import sys
 import os
 import re
 from colorama import Fore, Style, init
+import multiprocessing
+from queue import Empty
 
 # Initialize colorama (auto-reset for Windows support)
 init(autoreset=True)
@@ -35,6 +37,16 @@ class ColoredFormatter(logging.Formatter):
 
         return f"{log_color}{log_message}{Style.RESET_ALL}"
 
+
+class WorkerIDFilter(logging.Filter):
+    """Custom filter to add shortened worker ID to log records."""
+    def filter(self, record):
+        # Extract just the worker number from the 'ForkPoolWorker-x' format
+        worker_id = re.sub(r'ForkPoolWorker-(\d+)', r'Worker \1', multiprocessing.current_process().name)
+        record.worker_id = worker_id  # Add simplified worker name (e.g., Worker 1, Worker 2)
+        return record
+
+
 def logger(name, log_file, level=logging.DEBUG):
     """
     Sets up a logger to log messages to a file and console with colored output.
@@ -58,12 +70,15 @@ def logger(name, log_file, level=logging.DEBUG):
     # File handler (plain text logs)
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    file_handler.setFormatter(logging.Formatter('%(asctime)s - %(worker_id)s - %(levelname)s - %(message)s'))
 
     # Console handler (colored logs)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(ColoredFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+    console_handler.setFormatter(ColoredFormatter('%(asctime)s - %(worker_id)s - %(levelname)s - %(message)s'))
+
+    # Add the filter to include worker_id in all log messages
+    logger.addFilter(WorkerIDFilter())
 
     # Add handlers
     logger.addHandler(file_handler)
