@@ -31,6 +31,12 @@ class BaseAgent:
         self.chat_history = []
         self.log = logger(name=logger_name, log_file=f"Logs/{logger_name}.log")
 
+        self.url = "https://api.deepseek.com/v1/chat/completions"
+        self.headers = {
+            "Authorization": f"Bearer {os.environ.get('DEEPSEEK_API_KEY')}",
+            "Content-Type": "application/json",
+        }
+
         self.log.info(f"Initialized LLMAgent '{self.name}' with model {self.model}")
 
     def _prepare_prompt(self, input_prompt: str, has_system_prompt: bool) -> tuple[list[dict[str, str]], str]:
@@ -118,13 +124,8 @@ class BaseAgent:
         # Prepare messages in DeepSeek format
         messages = chat_history  # Assuming chat_history is already in [{"role": ..., "content": ...}] format
 
-        url = "https://api.deepseek.com/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {os.environ.get('DEEPSEEK_API_KEY')}",
-            "Content-Type": "application/json",
-        }
         payload = {
-            "model": self.model,  # e.g., "deepseek-chat" or "deepseek-coder"
+            "model": self.model,
             "messages": messages,
             "temperature": 0.7,  # adjust if you want
         }
@@ -132,7 +133,7 @@ class BaseAgent:
         self.log.info(f"Sending request to {self.name}...")
 
         try:
-            response = requests.post(url, headers=headers, json=payload)
+            response = requests.post(self.url, headers=self.headers, json=payload)
 
             if response.status_code != 200:
                 self.log.error(f"API Error {response.status_code}: {response.text}")

@@ -1,31 +1,35 @@
+# YAML 1.2
 # Backtest Configuration File
 
 # Macro News Aggregation Parameters
 macro_news_aggregation:
-  max_retries: 3                   # Maximum number of retries for the FilterAgent
-  chunk_size: 20                   # Discretize news chunks within the date range
-  verbose: False                    # Whether to print out the relevant news in news aggregation
-  filter_agent: True               # Whether to use LLM for news filtering (True if no aggregated news available)
-  prompt_num_relevance: "1-2"      # Number of relevant news to select in each chunk
+  max_retries:                                  3                   # Maximum number of retries for the FilterAgent
+  chunk_size:                                   20                  # Discretize news chunks within the date range
+  verbose:                                      False               # Whether to print out the relevant news in news aggregation
+  filter_agent:                                 False               # Whether to use LLM for news filtering (True if no aggregated news available)
+  prompt_num_relevance:                         "1-2"                # Number of relevant news to select in each chunk
 
 # Backtesting Configuration Parameters
 backtest:
-  asset: "US 10-year Treasury bonds"  # Asset for backtesting
-  model: "deepseek-chat"             # Model to be used in the backtest
-  has_system_prompt: False            # Whether the LLM model includes a system message
-  ticker: "IEF"                       # Ticker symbol of the asset
+  asset:                                        "US 10-year Treasury bonds"    # Asset for backtesting
+  model_aggregate:                              "deepseek-chat"                # LLM Model to be used in the backtest
+  model_trading:                                "deepseek-reasoner"                  # LLM model to be used for trading decision
+  has_system_prompt:                            False                          # Whether the LLM model includes a system message
+  ticker:                                       "IEF"                          # Ticker symbol of the asset
 
 # File Paths and Data Management
 file_paths:
-  data_root: "DataPipeline/Data"                              # Root directory for data
-  output_path: "Backtest/AggregatedData/AggregatedNews.csv"   # Path for aggregated output
-  news_path: "ProcessedData/MacroNews.csv"                    # Path for macro news data
-  mapping_csv: "MacroIndicators/indicator_mapping.csv"        # Path for the indicator mapping CSV
+  data_root:                                    "DataPipeline/Data"                                 # Root directory for data
+  output_path:                                  "Backtest/AggregatedData/AggregatedNews.csv"        # Path for aggregated output
+  news_path:                                    "ProcessedData/MacroNews.csv"                       # Path for macro news data
+  mapping_csv:                                  "MacroIndicators/indicator_mapping.csv"             # Path for the indicator mapping csv
   macro_csv:
     - "ProcessedData/MacroIndicatorDaily.csv"
     - "ProcessedData/MacroIndicatorWeekly.csv"
     - "ProcessedData/MacroIndicatorMonthly.csv"
     - "ProcessedData/MacroIndicatorQuarterly.csv"
+
+  results_path:                                 "Results/backtest_results.csv"                      # Path for backtest results csv 
 
 # Backtest Date Configuration
 dates:
@@ -33,13 +37,9 @@ dates:
   - "2022-12-02"  # End Date
 
 # Formatting Macro Indicator Prompt
-last_periods:
-  # daily: 10    # Number of periods for daily data
-  # weekly: 4    # Number of periods for weekly data
-  # monthly: 6   # Number of periods for monthly data
-  # quarterly: 4 # Number of periods for quarterly data
-
+last_periods_list:
   - 10    # Number of periods for daily data
-  - 4    # Number of periods for weekly data
-  - 6   # Number of periods for monthly data
-  - 4 # Number of periods for quarterly data
+  - 4     # Number of periods for weekly data
+  - 6     # Number of periods for monthly data
+  - 4     # Number of periods for quarterly data
+

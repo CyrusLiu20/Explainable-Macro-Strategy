@@ -25,12 +25,13 @@ def sentiment_to_decision(prediction):
 
 class NewsDrivenFramework:
     def __init__(self, dates: list, filter_agent: bool, chunk_size: int, asset: str, 
-                 ticker: str, model: str, has_system_prompt: bool, results_path: str,
-                 aggregator: MacroAggregator):
+                 ticker: str, model_aggregate: str, model_trading: str, has_system_prompt: bool, 
+                 results_path: str, aggregator: MacroAggregator):
         """Initialize the framework with the given parameters."""
         self.asset = asset
         self.ticker = ticker
-        self.model = model
+        self.model_aggregate = model_aggregate
+        self.model_trading = model_trading
         self.dates = dates
         self.filter_agent = filter_agent
         self.chunk_size = chunk_size
@@ -44,13 +45,13 @@ class NewsDrivenFramework:
         self.style = "risk_neutral"
         self.risk_tolerance = "medium"
 
-        # Decision making agent
+        # Decision making agent for trading
         self.agent = TradingAgent(
             asset=self.asset,
             ticker=self.ticker,
             name=self.name,
             logger_name=self.logger_name,
-            model=self.model,
+            model=self.model_trading,
             style=self.style,
             risk_tolerance=self.risk_tolerance,
             has_system_prompt=self.has_system_prompt,
@@ -117,7 +118,7 @@ class NewsDrivenFramework:
 
         return results_df
     
-    
+
     def save_results(self, df: pd.DataFrame):
 
         os.makedirs(os.path.dirname(self.results_path), exist_ok=True)

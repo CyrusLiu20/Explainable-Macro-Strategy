@@ -26,7 +26,7 @@ MACROECONOMIC_NEWS_PROMPT = NamedBlock(
 
 class MacroAggregator:
 
-    def __init__(self, news_path: str, prompt_num_relevance: str, asset: str, model: str, 
+    def __init__(self, news_path: str, prompt_num_relevance: str, asset: str, model_aggregate: str, 
                  output_path: str, verbose: bool, macro_csv_list: list, 
                  last_periods_list: list, mapping_csv: str):
         """
@@ -37,13 +37,13 @@ class MacroAggregator:
         self.news_path = news_path
         self.prompt_num_relevance = prompt_num_relevance
         self.asset = asset
-        self.model = model
+        self.model_aggregate = model_aggregate
         self.output_path = output_path
         self.verbose = verbose
         self.macro_csv_list = macro_csv_list
         self.last_periods_list = last_periods_list
         self.mapping_csv = mapping_csv
-        self.agent = FilterAgent(name="FilterAgent", asset=self.asset, prompt_num_relevance=self.prompt_num_relevance, model=self.model)
+        self.agent = FilterAgent(name="FilterAgent", asset=self.asset, prompt_num_relevance=self.prompt_num_relevance, model=self.model_aggregate)
         self.log = logger(name="MacroAggregator", log_file=f"Logs/backtest.log")
 
     # Function must be run before other aggregation functions
