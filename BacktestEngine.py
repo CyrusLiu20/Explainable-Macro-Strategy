@@ -5,35 +5,45 @@ from pathlib import Path
 from dataclasses import dataclass, field
 
 from Backtest import MacroAggregator, check_file_paths
-from Backtest import NewsDrivenFramework
+from Backtest import NewsDrivenFramework, DebateDrivenFramework
 from LLMAgent.InstructionPrompt import *
 from DataPipeline import write_mapping
 from Utilities import BacktestConfigurationLoader, filter_valid_kwargs
 
-def main(backtest: bool):
+def main(multi_agent: bool, config_path: str):
 
-    # backtest_config = load_config("Config.yaml")
-    backtest_config_loader = BacktestConfigurationLoader(config_path="Config.yaml")
+    ##################################### Load Backtest Configuration #####################################
+    backtest_config_loader = BacktestConfigurationLoader(config_path=config_path)
     backtest_config = backtest_config_loader.get_config()
 
     files_exist = check_file_paths([*backtest_config_loader.macro_csv_list, backtest_config_loader.news_path, backtest_config_loader.mapping_csv])
     write_mapping(folder_path=backtest_config_loader.data_root/"MacroIndicators")
+    ##################################### Load Backtest Configuration #####################################
 
-    if backtest:
 
-      aggregator_kwargs = filter_valid_kwargs(MacroAggregator, backtest_config)
-      aggregator = MacroAggregator(**aggregator_kwargs)
 
+    ##################################### Strategy Backtest #####################################
+    aggregator_kwargs = filter_valid_kwargs(MacroAggregator, backtest_config)
+    aggregator = MacroAggregator(**aggregator_kwargs)
+
+    if not multi_agent:
       backtest_kwargs = filter_valid_kwargs(NewsDrivenFramework, backtest_config)
       news_driven_framework = NewsDrivenFramework(aggregator=aggregator, **backtest_kwargs)
       backtest_results = news_driven_framework.backtest()
-   
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run macro data aggregation")
-    parser.add_argument("--backtest", action="store_true", default=False, help="Run Backtest Framework")
-    args = parser.parse_args()
+    else:
+      backtest_kwargs = filter_valid_kwargs(DebateDrivenFramework, backtest_config)
+      debate_driven_framework = DebateDrivenFramework(aggregator=aggregator, **backtest_kwargs)
+      backtest_results = debate_driven_framework.backtest()
+    ##################################### Strategy Backtest #####################################
 
-    main(backtest=args.backtest)
+
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser(description="Run Explainable Macro Strategy Backtest")
+  parser.add_argument("-m", "--multi-agent", action="store_true", default=False, help="Run Backtest Framework")
+  parser.add_argument("-c", "--config", type=str, required=True, help="Path to the configuration file (YAML)")
+  args = parser.parse_args()
+
+  main(multi_agent=args.multi_agent, config_path=args.config)
 
 
 
