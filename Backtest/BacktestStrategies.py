@@ -29,12 +29,12 @@ def sentiment_to_decision(prediction):
 
 
 # Single Agent Strategy
-class NewsDrivenFramework:
+class NewsDrivenStrategy:
 
     def __init__(self, dates: list, filter_agent: bool, chunk_size: int, num_processes: int, asset: str, 
                  ticker: str, model_aggregate: str, model_trading: str, trading_system_prompt: bool, 
                  results_path: str, aggregator: MacroAggregator):
-        """Initialize the framework with the given parameters."""
+        """Initialize the strategy with the given parameters."""
         self.asset = asset
         self.ticker = ticker
         self.model_aggregate = model_aggregate
@@ -66,11 +66,11 @@ class NewsDrivenFramework:
         )
 
         # Set up logging
-        self.log = logger(name="NewsDrivenFramework", log_file=f"Logs/backtest.log")
+        self.log = logger(name="NewsDrivenStrategy", log_file=f"Logs/backtest.log")
 
     def single_day_backtest(self, date, aggregator, filter_agent, chunk_size, agent):
         """Run backtest for a single date."""
-        log = logger(name="NewsDrivenFramework", log_file=f"Logs/backtest.log")
+        log = logger(name="NewsDrivenStrategy", log_file=f"Logs/backtest.log")
         results = []
         
         # Aggregate data for the current date
@@ -158,13 +158,13 @@ class NewsDrivenFramework:
 
 
 # Multi Agent Strategy
-class DebateDrivenFramework:
+class DebateDrivenStrategy:
 
     def __init__(self, dates: list, filter_agent: bool, chunk_size: int, num_processes: int, 
                  num_rounds: int, asset: str,
                  ticker: str, model_aggregate: str, model_trading: str, trading_system_prompt: bool, 
                  results_path: str, aggregator: MacroAggregator):
-        """Initialize the framework with the given parameters."""
+        """Initialize the strategy with the given parameters."""
         self.asset = asset
         self.ticker = ticker
         self.model_aggregate = model_aggregate
@@ -197,11 +197,11 @@ class DebateDrivenFramework:
         )
 
         # Set up logging
-        self.log = logger(name="NewsDrivenFramework", log_file=f"Logs/backtest.log")
+        self.log = logger(name="NewsDrivenStrategy", log_file=f"Logs/backtest.log")
 
     def single_day_backtest(self, date, aggregator, filter_agent, chunk_size, network):
         """Run backtest for a single date."""
-        log = logger(name="NewsDrivenFramework", log_file=f"Logs/backtest.log")
+        log = logger(name="NewsDrivenStrategy", log_file=f"Logs/backtest.log")
         results = []
         
         # Aggregate data for the current date

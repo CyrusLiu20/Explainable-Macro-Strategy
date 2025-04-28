@@ -5,7 +5,7 @@ from pathlib import Path
 from dataclasses import dataclass, field
 
 from Backtest import MacroAggregator, check_file_paths
-from Backtest import NewsDrivenFramework, DebateDrivenFramework
+from Backtest import NewsDrivenStrategy, DebateDrivenStrategy
 from LLMAgent.InstructionPrompt import *
 from DataPipeline import write_mapping
 from Utilities import BacktestConfigurationLoader, filter_valid_kwargs
@@ -27,19 +27,19 @@ def main(multi_agent: bool, config_path: str):
     aggregator = MacroAggregator(**aggregator_kwargs)
 
     if not multi_agent:
-      backtest_kwargs = filter_valid_kwargs(NewsDrivenFramework, backtest_config)
-      news_driven_framework = NewsDrivenFramework(aggregator=aggregator, **backtest_kwargs)
-      backtest_results = news_driven_framework.backtest()
+      backtest_kwargs = filter_valid_kwargs(NewsDrivenStrategy, backtest_config)
+      news_driven_strategy = NewsDrivenStrategy(aggregator=aggregator, **backtest_kwargs)
+      backtest_results = news_driven_strategy.backtest()
     else:
-      backtest_kwargs = filter_valid_kwargs(DebateDrivenFramework, backtest_config)
-      debate_driven_framework = DebateDrivenFramework(aggregator=aggregator, **backtest_kwargs)
-      backtest_results = debate_driven_framework.backtest()
+      backtest_kwargs = filter_valid_kwargs(DebateDrivenStrategy, backtest_config)
+      debate_driven_strategy = DebateDrivenStrategy(aggregator=aggregator, **backtest_kwargs)
+      backtest_results = debate_driven_strategy.backtest()
     ##################################### Strategy Backtest #####################################
 
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Run Explainable Macro Strategy Backtest")
-  parser.add_argument("-m", "--multi-agent", action="store_true", default=False, help="Run Backtest Framework")
+  parser.add_argument("-m", "--multi-agent", action="store_true", default=False, help="Run Multi-Agent Backtest Strategy")
   parser.add_argument("-c", "--config", type=str, required=True, help="Path to the configuration file (YAML)")
   args = parser.parse_args()
 
