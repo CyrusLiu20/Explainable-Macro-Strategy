@@ -130,7 +130,7 @@ class MacroAggregator:
         new_df = pd.concat(all_news, ignore_index=True) if all_news else pd.DataFrame()
         self.save_news_chunks(self.output_path, new_df)
 
-        return format_macro_news(self.output_path), len(new_df)
+        return format_macro_news(self.output_path, filter_dates=filter_dates, chunk_size=1e6), len(new_df)
 
 
     def aggregate_indicators(self):

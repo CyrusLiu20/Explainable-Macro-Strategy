@@ -16,7 +16,9 @@ from Utilities.Logger import logger
 from LLMAgent.InstructionPrompt import *
 
 class BaseAgent:
-    def __init__(self, name: str, logger_name: str = "base_agent", model: str = "deepseek-r1:1.5b", system_prompt: str = ""):
+    def __init__(self, name: str, logger_name: str = "base_agent", 
+                       model: str = "deepseek-r1:1.5b", system_prompt: str = "",
+                       has_system_prompt: bool = False):
         """
         Base class for an LLM-based agent.
 
@@ -28,6 +30,7 @@ class BaseAgent:
         self.name = name
         self.model = model
         self.system_prompt = system_prompt
+        self.has_system_prompt = has_system_prompt
         self.chat_history = []
         self.log = logger(name=logger_name, log_file=f"Logs/{logger_name}.log")
 
@@ -37,28 +40,10 @@ class BaseAgent:
             "Content-Type": "application/json",
         }
 
+        # Append system message to the chat history
+        self._append_chat_history("system" if self.has_system_prompt else "user", self.system_prompt)
+
         self.log.info(f"Initialized LLMAgent '{self.name}' with model {self.model}")
-
-    def _prepare_prompt(self, input_prompt: str, has_system_prompt: bool) -> tuple[list[dict[str, str]], str]:
-        """
-        Prepares the chat history and input prompt based on whether the model supports system prompts.
-
-        :param input_prompt: The user's input prompt.
-        :param has_system_prompt: Whether the model supports system prompts.
-        :return: A tuple containing the updated chat history and the final input prompt.
-        """
-        if has_system_prompt:
-            # If the model supports system prompts, add the system prompt to the chat history as a system message
-            self.chat_history.append({"role": "system", "content": self.system_prompt})
-            final_input_prompt = input_prompt
-        else:
-            # If the model does not support system prompts, add the system prompt as a user message
-            self.chat_history.append({"role": "user", "content": self.system_prompt})
-            final_input_prompt = input_prompt
-
-        self.chat_history.append({"role": "user", "content": final_input_prompt})
-
-        return self.chat_history, final_input_prompt
 
     def start_ollama_server(self):
         """Start Ollama server in the background if not already running."""
@@ -67,46 +52,8 @@ class BaseAgent:
         time.sleep(2)  # Give some time for the server to start
         self.log.info("Ollama server started successfully.")
 
-    def response(self, input_prompt: str, has_system_prompt: bool) -> tuple[str, str]:
-        """
-        Handles chat interaction with the LLM, returning the raw response.
 
-        :param input_prompt: The user's input prompt.
-        :param has_system_prompt: Whether the model supports system prompts.
-        :return: A tuple containing the raw response and a status message.
-        """
-        # Prepare the chat history and input prompt based on model capabilities
-        chat_history, final_input_prompt = self._prepare_prompt(input_prompt, has_system_prompt)
-
-        # Query the model
-        self.log.info(f"Sending request to {self.name}...")
-        # self.log.info(chat_history)
-
-        try:
-            response = ollama.chat(model=self.model, messages=chat_history)
-
-            # Check if response is empty (potential token limit issue)
-            if not response or "message" not in response or "content" not in response["message"]:
-                self.log.error("Invalid response format from LLM. Possible input token limit exceeded.")
-                return "", "Invalid response format. Input may be too long."
-
-            response_content = response["message"]["content"]
-
-            # Store assistant's response
-            self.chat_history.append({"role": "assistant", "content": response_content})
-
-            return response_content, "Success"
-
-        except ValueError as e:
-            self.log.error(f"Input exceeded token limit: {e}")
-            return "", "Input too long. Reduce the size of your query."
-
-        except Exception as e:
-            self.log.error(f"Unexpected error during LLM response processing: {e}")
-            return "", "An unexpected error occurred."
-
-
-    def response_chat(self, input_prompt: str, has_system_prompt: bool) -> tuple[str, str]:
+    def response_chat(self, input_prompt: str) -> tuple[str, str]:
         """
         Handles chat interaction with the DeepSeek API, returning the raw response.
 
@@ -114,18 +61,21 @@ class BaseAgent:
         :param has_system_prompt: Whether the model supports system prompts.
         :return: A tuple containing the raw response and a status message.
         """
-        # Prepare the chat history and input prompt based on model capabilities
-        chat_history, final_input_prompt = self._prepare_prompt(input_prompt, has_system_prompt)
+        # Prepares the chat history
+        self._append_chat_history(role="user",content=input_prompt)
+        chat_history = self.chat_history
 
         # Prepare messages in DeepSeek format
         messages = chat_history
         payload = {
             "model": self.model,
             "messages": messages,
-            "temperature": 0.7,  # adjust if you want
+            "temperature": 0.7,
         }
 
         self.log.info(f"Sending request to {self.name}...")
+
+        self._debug_messages(messages)
 
         try:
             response = requests.post(self.url, headers=self.headers, json=payload)
@@ -143,7 +93,7 @@ class BaseAgent:
             response_content = response_json["choices"][0]["message"]["content"]
 
             # Store assistant's response
-            self.chat_history.append({"role": "assistant", "content": response_content})
+            self._append_chat_history(role="assistant",content=response_content)
 
             return response_content, "Success"
 
@@ -154,3 +104,58 @@ class BaseAgent:
         except Exception as e:
             self.log.error(f"Unexpected error during LLM response processing: {e}")
             return "", "An unexpected error occurred."
+
+    # Appends a message to the chat history.
+    def _append_chat_history(self, role: str, content: str) -> None:
+        self.chat_history.append({"role": role, "content": content})
+
+    # Prints out the key and the first few characters of each message for debugging purposes
+    def _debug_messages(self, messages):
+
+        for message in messages:
+            key = message.get('role', 'Unknown key')
+            content = message.get('content', '')
+            preview = content[:50]
+            self.log.info(f"\nKey: {key}\nPreview: {preview}\n", skip_lines=True)
+
+
+
+    ################################## Deprecated Ollama Response ################################## 
+    # def response(self, input_prompt: str, has_system_prompt: bool) -> tuple[str, str]:
+    #     """
+    #     Handles chat interaction with the LLM, returning the raw response.
+
+    #     :param input_prompt: The user's input prompt.
+    #     :param has_system_prompt: Whether the model supports system prompts.
+    #     :return: A tuple containing the raw response and a status message.
+    #     """
+    #     # Prepare the chat history and input prompt based on model capabilities
+    #     chat_history, final_input_prompt = self._prepare_prompt(input_prompt, has_system_prompt)
+
+    #     # Query the model
+    #     self.log.info(f"Sending request to {self.name}...")
+    #     # self.log.info(chat_history)
+
+    #     try:
+    #         response = ollama.chat(model=self.model, messages=chat_history)
+
+    #         # Check if response is empty (potential token limit issue)
+    #         if not response or "message" not in response or "content" not in response["message"]:
+    #             self.log.error("Invalid response format from LLM. Possible input token limit exceeded.")
+    #             return "", "Invalid response format. Input may be too long."
+
+    #         response_content = response["message"]["content"]
+
+    #         # Store assistant's response
+    #         self.chat_history.append({"role": "assistant", "content": response_content})
+
+    #         return response_content, "Success"
+
+    #     except ValueError as e:
+    #         self.log.error(f"Input exceeded token limit: {e}")
+    #         return "", "Input too long. Reduce the size of your query."
+
+    #     except Exception as e:
+    #         self.log.error(f"Unexpected error during LLM response processing: {e}")
+    #         return "", "An unexpected error occurred."
+    ################################## Deprecated Ollama Response ################################## 

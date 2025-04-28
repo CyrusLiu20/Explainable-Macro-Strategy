@@ -18,11 +18,6 @@ from Utilities.Logger import logger
 from LLMAgent.InstructionPrompt import *
 from LLMAgent.BaseAgent import BaseAgent
 
-import re
-from typing import Dict
-from procoder.functional import format_prompt
-from procoder.prompt import NamedBlock, Collection
-
 class TradingAgent(BaseAgent):
     def __init__(self, asset: str, ticker: str, name: str = "TradingAgent", 
                  logger_name: str ="TradingAgent", model: str = "deepseek-r1:1.5b", 
@@ -58,8 +53,10 @@ class TradingAgent(BaseAgent):
         self.EXAMPLE_PROMPT = Collection(DECISION_PROMPT, EXAMPLE_DECISION_PROMPT)
         self.example_prompt = format_prompt(self.EXAMPLE_PROMPT,{"asset": self.asset})
 
+        self.ARGUMENT_PROMPT = Collection(ARGUMENT_PROMPT, EXAMPLE_ARGUMENT_PROMPT)
+
         # Initialize the base class
-        super().__init__(name=name, logger_name=logger_name, model=model, system_prompt=system_prompt)
+        super().__init__(name=name, logger_name=logger_name, model=model, system_prompt=system_prompt, has_system_prompt=self.has_system_prompt)
 
         self.log.info(f"Initialized TradingAgent for {self.asset} ({self.ticker}) with model {self.model}")
 
@@ -73,7 +70,7 @@ class TradingAgent(BaseAgent):
         """
         # Get raw response from the base class
         input_prompt = f"{input_prompt}\n\n{self.example_prompt}"
-        raw_response, status = self.response_chat(input_prompt, self.has_system_prompt)
+        raw_response, status = self.response_chat(input_prompt=input_prompt)
 
         if status != "Success":
             return "Error", status
@@ -85,6 +82,27 @@ class TradingAgent(BaseAgent):
             self.log.warning("LLM returned 'Unknown' as the prediction. Check the response format.")
 
         return extracted_response["prediction"], extracted_response["explanation"]
+
+    def argue(self, own_opinion, other_prediction, other_explanation):
+
+        arguments = {"other_prediction": other_prediction, "other_explanation": other_explanation}
+        argument_prompt = format_prompt(self.ARGUMENT_PROMPT,arguments)
+
+        # Get raw response from the base class
+        input_prompt = f"{input_prompt}\n\n{self.example_prompt}"
+        print(self.example_prompt)
+        raw_response, status = self.response_chat(input_prompt, self.has_system_prompt)
+
+        if status != "Success":
+            return "Error", status
+
+        # Extract prediction and explanation
+        extracted_response = self.extract_prediction(raw_response)
+
+        if extracted_response["agreement"] == "Unknown":
+            self.log.warning("LLM returned 'Unknown' as the prediction. Check the response format.")
+
+        return extracted_response["agreement"], extracted_response["response"]
     
 
     def extract_prediction(self, response_content: str) -> Dict[str, str]:
@@ -102,9 +120,19 @@ class TradingAgent(BaseAgent):
         explanation_match = re.search(r"(?:\*\*)?\s*Explanation:\s*\n*(.*)", response_content, re.DOTALL | re.IGNORECASE)
         explanation = explanation_match.group(1).strip() if explanation_match else "No explanation found."
 
-        return {"prediction": prediction, "explanation": explanation} 
+        return {"prediction": prediction, "explanation": explanation}     
 
+    def extract_argument(self, response_content: str) -> Dict[str, str]:
 
+        # Extract prediction using regex
+        agreement_match = re.search(r"(?:\*\*)?\s*Agreement:\s*([^\n*]+)", response_content, re.IGNORECASE)
+        agreement = agreement_match.group(1).strip() if agreement_match else "Unknown"
+
+        # Extract explanation using regex
+        response_match = re.search(r"(?:\*\*)?\s*Response:\s*\n*(.*)", response_content, re.DOTALL | re.IGNORECASE)
+        response = response_match.group(1).strip() if response_match else "No explanation found."
+
+        return {"agreement": agreement, "response": response} 
 
 
 
@@ -133,7 +161,7 @@ class FilterAgent(BaseAgent):
         )
 
         # Initialize the base class
-        super().__init__(name=name, logger_name=logger_name, model=model, system_prompt=system_prompt)
+        super().__init__(name=name, logger_name=logger_name, model=model, system_prompt=system_prompt, has_system_prompt=self.has_system_prompt)
 
         self.log.info(f"Initialized SummaryAgent for {self.asset} with model {self.model}")
 
@@ -151,8 +179,7 @@ class FilterAgent(BaseAgent):
         input_prompt = format_prompt(self.INPUT_PROMPT, input)
 
         # Get raw response from the base class
-        # raw_response, status = self.response(input_prompt, has_system_prompt=self.has_system_prompt)
-        raw_response, status = self.response_chat(input_prompt, has_system_prompt=self.has_system_prompt)
+        raw_response, status = self.response_chat(input_prompt)
 
         if status != "Success":
             self.log.error(f"Failed to get response from LLM: {status}")
@@ -254,16 +281,3 @@ class FilterAgent(BaseAgent):
 
 
         return df, status_flag      
-
-
-
-
-
-
-
-
-
-
-
-
-
