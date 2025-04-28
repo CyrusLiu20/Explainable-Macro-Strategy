@@ -53,7 +53,9 @@ class TradingAgent(BaseAgent):
         self.EXAMPLE_PROMPT = Collection(DECISION_PROMPT, EXAMPLE_DECISION_PROMPT)
         self.example_prompt = format_prompt(self.EXAMPLE_PROMPT,{"asset": self.asset})
 
+        # Discussion based strategy for multi-agent network
         self.ARGUMENT_PROMPT = Collection(ARGUMENT_PROMPT, EXAMPLE_ARGUMENT_PROMPT)
+        self.REFLECTION_PROMPT = Collection(FINAL_REFLECTION_PROMPT, EXAMPLE_FINAL_REFLECTION_PROMPT)
 
         # Initialize the base class
         super().__init__(name=name, logger_name=logger_name, model=model, system_prompt=system_prompt, has_system_prompt=self.has_system_prompt)
@@ -83,15 +85,39 @@ class TradingAgent(BaseAgent):
 
         return extracted_response["prediction"], extracted_response["explanation"]
 
-    def argue(self, own_opinion, other_prediction, other_explanation):
+    def argue(self, other_agent_name, other_prediction, other_explanation):
 
-        arguments = {"other_prediction": other_prediction, "other_explanation": other_explanation}
+        arguments = {"other_agent_name": other_agent_name,
+                     "other_prediction": other_prediction, 
+                     "other_explanation": other_explanation,
+                     "risk_tolerance": self.risk_tolerance,
+                     "style": self.style,}
+        
         argument_prompt = format_prompt(self.ARGUMENT_PROMPT,arguments)
 
         # Get raw response from the base class
-        input_prompt = f"{input_prompt}\n\n{self.example_prompt}"
-        print(self.example_prompt)
-        raw_response, status = self.response_chat(input_prompt, self.has_system_prompt)
+        input_prompt = argument_prompt
+        raw_response, status = self.response_chat(input_prompt=input_prompt)
+
+        if status != "Success":
+            return "Error", status
+
+        # Extract prediction and explanation
+        extracted_response = self.extract_argument(raw_response)
+
+        if extracted_response["agreement"] == "Unknown":
+            self.log.warning("LLM returned 'Unknown' as the prediction. Check the response format.")
+
+        return extracted_response["agreement"], extracted_response["response"]
+    
+    def reflection(self):
+
+        reflect_dict = {"asset": self.asset}
+        reflect_prompt = format_prompt(self.REFLECTION_PROMPT,reflect_dict)
+
+        # Get raw response from the base class
+        input_prompt = reflect_prompt
+        raw_response, status = self.response_chat(input_prompt=input_prompt)
 
         if status != "Success":
             return "Error", status
@@ -99,11 +125,10 @@ class TradingAgent(BaseAgent):
         # Extract prediction and explanation
         extracted_response = self.extract_prediction(raw_response)
 
-        if extracted_response["agreement"] == "Unknown":
+        if extracted_response["prediction"] == "Unknown":
             self.log.warning("LLM returned 'Unknown' as the prediction. Check the response format.")
 
-        return extracted_response["agreement"], extracted_response["response"]
-    
+        return extracted_response["prediction"], extracted_response["explanation"]
 
     def extract_prediction(self, response_content: str) -> Dict[str, str]:
         """

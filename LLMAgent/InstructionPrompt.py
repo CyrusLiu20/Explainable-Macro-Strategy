@@ -82,7 +82,7 @@ DECISION_PROMPT = NamedBlock(
     - Bearish
     - Strongly Bearish
 
-    Provide an explanation for your prediction.
+    Provide a detailed explanation for your prediction.
     """)
 )
 
@@ -114,6 +114,69 @@ EXAMPLE_SUMMARY_PROMPT = NamedBlock(
     ```
     """
 )
+
+ARGUMENT_PROMPT = NamedBlock(
+    name="Debate Response to Other Agent",
+    content=textwrap.dedent("""
+    You are a {style} trader with {risk_tolerance} risk tolerance.
+    
+    Another agent named {other_agent_name} made a prediction:
+    "{other_prediction}"
+    
+    Their explanation:
+    "{other_explanation}"
+
+    Based on your trading philosophy, critically assess their prediction and explanation.
+    
+    Your goal is to **convince them** to adopt your own trading perspective, if you disagree.
+
+    Please follow the format below:
+    """)
+)
+
+
+EXAMPLE_ARGUMENT_PROMPT = NamedBlock(
+    name="Expected Response Output Format",
+    content=textwrap.dedent("""
+    ```
+    Agreement: [Strongly Agree / Agree / Neutral / Disagree / Strongly Disagree]
+    Response: [Explain why you agree or disagree with the other agent's view.]
+    ```
+    """)
+)
+
+FINAL_REFLECTION_PROMPT = NamedBlock(
+    name="Final Reflection and Updated Forecast",
+    content=textwrap.dedent("""
+    After engaging in a detailed debate with other agents, you now need to reflect on all the arguments presented.
+
+    Please output your response in the following format:
+
+    Only choose one of the following prediction options:
+    - Strongly Bullish
+    - Bullish
+    - Slightly Bullish
+    - Flat
+    - Fluctuating
+    - Slightly Bearish
+    - Bearish
+    - Strongly Bearish
+
+    Be sure to provide a clear explanation for your final prediction.
+    """)
+)
+
+EXAMPLE_FINAL_REFLECTION_PROMPT = NamedBlock(
+    name="Expected Final Prediction and Explanation Format",
+    content=textwrap.dedent("""
+    ```
+    Prediction: [Trend]  # One of the options above
+    Explanation: [Revised Explanation]
+    ```
+    """)
+)
+
+
 
 
 def format_macro_news(csv_file, filter_dates=None, chunk_size=10):

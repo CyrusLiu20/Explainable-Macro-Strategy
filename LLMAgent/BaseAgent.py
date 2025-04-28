@@ -45,14 +45,6 @@ class BaseAgent:
 
         self.log.info(f"Initialized LLMAgent '{self.name}' with model {self.model}")
 
-    def start_ollama_server(self):
-        """Start Ollama server in the background if not already running."""
-        self.log.info("Starting Ollama server...")
-        subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(2)  # Give some time for the server to start
-        self.log.info("Ollama server started successfully.")
-
-
     def response_chat(self, input_prompt: str) -> tuple[str, str]:
         """
         Handles chat interaction with the DeepSeek API, returning the raw response.
@@ -115,10 +107,16 @@ class BaseAgent:
         for message in messages:
             key = message.get('role', 'Unknown key')
             content = message.get('content', '')
-            preview = content[:50]
-            self.log.info(f"\nKey: {key}\nPreview: {preview}\n", skip_lines=True)
+            preview = content[:200]
+            print(f"Role: {key}\nContent (Preview): {preview}\n")
 
-
+    # Deprecated: start Ollama server in the background
+    def start_ollama_server(self):
+        """Start Ollama server in the background if not already running."""
+        self.log.info("Starting Ollama server...")
+        subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(2)  # Give some time for the server to start
+        self.log.info("Ollama server started successfully.")
 
     ################################## Deprecated Ollama Response ################################## 
     # def response(self, input_prompt: str, has_system_prompt: bool) -> tuple[str, str]:
