@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import random
 import textwrap
 import sys
@@ -73,7 +74,7 @@ class MacroAggregator:
             return self.aggregate_news_llm(filter_dates=filter_dates, max_retries=max_retries, chunk_size=chunk_size)
 
         try:
-            news_chunk, num_news = format_macro_news(csv_file=self.output_path, filter_dates=filter_dates, chunk_size=chunk_size)
+            news_chunk, num_news = format_macro_news(csv_file=self.output_path, filter_dates=filter_dates, chunk_size=np.inf)
             self.log.info(f"Loaded filtered news from {self.output_path}")
 
             # Check if news_chunk is empty or has zero length, use aggregate_news_llm if true
@@ -87,7 +88,7 @@ class MacroAggregator:
         except Exception as e:
             self.log.error(f"Error loading CSV: {e}")
 
-        return pd.DataFrame(), num_news
+        return pd.DataFrame(), -1
 
 
     def aggregate_news_llm(self, filter_dates, max_retries=3, chunk_size=15, max_chunks=10):

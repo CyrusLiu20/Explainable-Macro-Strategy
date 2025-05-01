@@ -2,6 +2,7 @@ import pandas as pd
 import multiprocessing
 import time
 import os
+from datetime import timedelta
 
 from Backtest import MacroAggregator
 from LLMAgent import TradingAgent, MultiAgentNetwork
@@ -12,14 +13,14 @@ from Utilities import logger
 # Mapping market sentiment to trading decision
 def sentiment_to_decision(prediction):
     sentiment_map = {
-        "Strongly Bullish": 2,
+        "Strongly Bullish": 1,
         "Bullish": 1,
-        "Slightly Bullish": 0.5,
+        "Slightly Bullish": 1,
         "Flat": 0,
         "Fluctuating": 0,
-        "Slightly Bearish": -0.5,
+        "Slightly Bearish": -1,
         "Bearish": -1,
-        "Strongly Bearish": -2
+        "Strongly Bearish": -1,
     }
     
     if isinstance(prediction, list):
@@ -32,11 +33,12 @@ def sentiment_to_decision(prediction):
 class NewsDrivenStrategy:
 
     def __init__(self, dates: list, filter_agent: bool, chunk_size: int, num_processes: int, asset: str, 
-                 ticker: str, model_aggregate: str, model_trading: str, trading_system_prompt: bool, 
+                 ticker: str, lookback_period: int, model_aggregate: str, model_trading: str, trading_system_prompt: bool, 
                  results_path: str, aggregator: MacroAggregator):
         """Initialize the strategy with the given parameters."""
         self.asset = asset
         self.ticker = ticker
+        self.lookback_period = lookback_period
         self.model_aggregate = model_aggregate
         self.model_trading = model_trading
         self.dates = dates
@@ -68,7 +70,7 @@ class NewsDrivenStrategy:
         # Set up logging
         self.log = logger(name="NewsDrivenStrategy", log_file=f"Logs/backtest.log")
 
-    def single_day_backtest(self, date, aggregator, filter_agent, chunk_size, agent):
+    def single_day_backtest(self, date, lookback_period, aggregator, filter_agent, chunk_size, agent):
         """Run backtest for a single date."""
         log = logger(name="NewsDrivenStrategy", log_file=f"Logs/backtest.log")
         results = []
@@ -79,10 +81,12 @@ class NewsDrivenStrategy:
         # Measure aggregation time
         log.info(f"Aggregating data for {date.strftime('%Y-%m-%d')}...")
         aggregation_start_time = time.time()
-        
+        start_date = date - timedelta(days=lookback_period)
+        filter_dates = [start_date + timedelta(days=i) for i in range(lookback_period + 1)]
+
         aggregator.set_current_date(current_date=date)  # To filter only the current date
         input_prompt = aggregator.aggregate_all(
-            filter_dates=[date],
+            filter_dates=[filter_dates],
             filter_agent=filter_agent,
             chunk_size=chunk_size
         )
@@ -92,6 +96,9 @@ class NewsDrivenStrategy:
 
         # Get trading decision from the agent
         start_time = time.time()
+
+        print(input_prompt)
+        # prediction, explanation = "N/A", "N/A" # Debugging purposes
         prediction, explanation = agent.get_trading_decision(input_prompt)
         decision = sentiment_to_decision(prediction=prediction)
         elapsed_time = time.time() - start_time
@@ -101,7 +108,7 @@ class NewsDrivenStrategy:
         log.info(f"Decision time: {elapsed_time:.2f} seconds for date: [{date}]")
 
         # Store results for the current date
-        results.append({"Date": date, "Prediction": prediction, "Decision": decision, "Explanation": explanation})
+        results.append({"Date": date, "Agent": self.name, "Prediction": prediction, "Decision": decision, "Explanation": explanation})
 
         return results
 
@@ -112,24 +119,24 @@ class NewsDrivenStrategy:
 
         date_range = pd.date_range(start=self.dates[0], end=self.dates[1])
 
-        self.log.info(f"Starting backtesting with {self.num_processes} processes")
+        self.log.info(f"Starting backtesting with {self.num_processes} processes and {self.lookback_period} lookback periods")
 
         if self.num_processes == 1:
             # Serial processing
             for date in date_range:
-                day_results = self.single_day_backtest(date, self.aggregator, self.filter_agent, self.chunk_size, self.agent)
+                day_results = self.single_day_backtest(date, self.lookback_period, self.aggregator, self.filter_agent, self.chunk_size, self.agent)
                 results.append(day_results)
         else:
             # Parallel processing
             with multiprocessing.Pool(processes=self.num_processes) as pool:
                 results = pool.starmap(self.single_day_backtest, [
-                    (date, self.aggregator, self.filter_agent, self.chunk_size, self.agent) 
+                    (date, self.lookback_period, self.aggregator, self.filter_agent, self.chunk_size, self.agent) 
                     for date in date_range
                 ])
 
         # Flatten the list of results and convert to DataFrame
         flat_results = [item for sublist in results for item in sublist]
-        results_df = pd.DataFrame(flat_results, columns=["Date", "Prediction", "Decision", "Explanation"])
+        results_df = pd.DataFrame(flat_results, columns=["Date", "Agent", "Prediction", "Decision", "Explanation"])
 
         self.save_results(results_df)
 

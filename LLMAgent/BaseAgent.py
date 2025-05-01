@@ -67,7 +67,7 @@ class BaseAgent:
 
         self.log.info(f"Sending request to {self.name}...")
 
-        self._debug_messages(messages)
+        # self._debug_messages(messages)
 
         try:
             response = requests.post(self.url, headers=self.headers, json=payload)

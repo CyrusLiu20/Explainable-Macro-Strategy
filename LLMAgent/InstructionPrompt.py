@@ -4,6 +4,7 @@ from procoder.prompt import NamedBlock, NamedVariable, Collection
 from Utilities.Logger import logger
 
 import ast
+from itertools import chain
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -70,7 +71,7 @@ DECISION_PROMPT = NamedBlock(
     name="Decision (Forecast Price)",
     content=textwrap.dedent("""
     Based on the provided macroeconomic indicators and recent economic news, 
-    predict the price of the future movement for [{asset}].
+    predict the **Next Day** price of the future movement for [{asset}].
 
     Only output one of the following options:
     - Strongly Bullish
@@ -189,6 +190,7 @@ def format_macro_news(csv_file, filter_dates=None, chunk_size=10):
 
     # Filter by dates if filter_dates is provided
     if filter_dates:
+        filter_dates = flatten_list(filter_dates)
         filter_dates = [pd.to_datetime(date).date() for date in filter_dates]
         df = df[df['Date'].dt.date.isin(filter_dates)]
     
@@ -285,6 +287,10 @@ def format_macro_indicator(macro_csv, mapping_csv, current_date, last_periods=4)
 
     return formatted_output
 
+
+# General function to flatten any nested list
+def flatten_list(nested_list):
+    return list(chain.from_iterable(nested_list)) if isinstance(nested_list, list) and isinstance(nested_list[0], list) else nested_list
 
 
 ### Deprecated and will be deleted
