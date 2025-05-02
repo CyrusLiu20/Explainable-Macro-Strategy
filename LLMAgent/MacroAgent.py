@@ -108,7 +108,7 @@ class TradingAgent(BaseAgent):
         if extracted_response["agreement"] == "Unknown":
             self.log.warning("LLM returned 'Unknown' as the prediction. Check the response format.")
 
-        return extracted_response["agreement"], extracted_response["response"]
+        return extracted_response["agreement"], extracted_response["response"], extracted_response["prediction"]
     
     def reflection(self):
 
@@ -157,7 +157,11 @@ class TradingAgent(BaseAgent):
         response_match = re.search(r"(?:\*\*)?\s*Response:\s*\n*(.*)", response_content, re.DOTALL | re.IGNORECASE)
         response = response_match.group(1).strip() if response_match else "No explanation found."
 
-        return {"agreement": agreement, "response": response} 
+        # Extract prediction using regex
+        prediction_match = re.search(r"(?:\*\*)?\s*Prediction:\s*([^\n*]+)", response_content, re.IGNORECASE)
+        prediction = prediction_match.group(1).strip() if prediction_match else "Unknown"
+
+        return {"agreement": agreement, "response": response, "prediction": prediction} 
 
 
 

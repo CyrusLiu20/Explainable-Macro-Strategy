@@ -127,9 +127,13 @@ ARGUMENT_PROMPT = NamedBlock(
     Their explanation:
     "{other_explanation}"
 
-    Based on your trading philosophy, critically assess their prediction and explanation.
-    
-    Your goal is to **convince them** to adopt your own trading perspective, if you disagree.
+    Based on your trading philosophy, critically assess their prediction and explanation. If you disagree, aim to **persuade** them by challenging their assumptions or logic. 
+    If you find their reasoning convincing, acknowledge it and consider updating your stance.
+
+    **Note**: The goal is for all agents to eventually **agree on a unified market view**. 
+    The discussion ends only when unanimous agreement is reached.
+
+    You may reference previous rounds or highlight contradictions.
 
     Please follow the format below:
     """)
@@ -142,6 +146,8 @@ EXAMPLE_ARGUMENT_PROMPT = NamedBlock(
     ```
     Agreement: [Strongly Agree / Agree / Neutral / Disagree / Strongly Disagree]
     Response: [Explain why you agree or disagree with the other agent's view.]
+                            
+    Prediction: [Revised Prediction]
     ```
     """)
 )
@@ -177,6 +183,24 @@ EXAMPLE_FINAL_REFLECTION_PROMPT = NamedBlock(
     """)
 )
 
+
+# Mapping market sentiment to trading decision
+def sentiment_to_decision(prediction):
+    sentiment_map = {
+        "Strongly Bullish": 1,
+        "Bullish": 1,
+        "Slightly Bullish": 1,
+        "Flat": 0,
+        "Fluctuating": 0,
+        "Slightly Bearish": -1,
+        "Bearish": -1,
+        "Strongly Bearish": -1,
+    }
+    
+    if isinstance(prediction, list):
+        return [sentiment_map.get(p, 0) for p in prediction]
+    else:
+        return sentiment_map.get(prediction, 0) # Default to 0 if the prediction is not recognized
 
 
 

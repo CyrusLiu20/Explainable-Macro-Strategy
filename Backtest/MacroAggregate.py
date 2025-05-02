@@ -148,7 +148,7 @@ class MacroAggregator:
         # self.log.debug(combined_indicator_text)
 
         return combined_indicator_text
-    
+
 
     def aggregate_all(self, filter_dates=None, filter_agent=False, max_retries=3, chunk_size=15):
         """

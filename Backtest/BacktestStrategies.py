@@ -10,25 +10,6 @@ from LLMAgent.InstructionPrompt import *
 from Utilities import logger
 
 
-# Mapping market sentiment to trading decision
-def sentiment_to_decision(prediction):
-    sentiment_map = {
-        "Strongly Bullish": 1,
-        "Bullish": 1,
-        "Slightly Bullish": 1,
-        "Flat": 0,
-        "Fluctuating": 0,
-        "Slightly Bearish": -1,
-        "Bearish": -1,
-        "Strongly Bearish": -1,
-    }
-    
-    if isinstance(prediction, list):
-        return [sentiment_map.get(p, 0) for p in prediction]
-    else:
-        return sentiment_map.get(prediction, 0) # Default to 0 if the prediction is not recognized
-
-
 # Single Agent Strategy
 class NewsDrivenStrategy:
 
@@ -168,28 +149,29 @@ class NewsDrivenStrategy:
 class DebateDrivenStrategy:
 
     def __init__(self, dates: list, filter_agent: bool, chunk_size: int, num_processes: int, 
-                 num_rounds: int, asset: str,
+                 max_rounds: int, asset: str, lookback_period: int,
                  ticker: str, model_aggregate: str, model_trading: str, trading_system_prompt: bool, 
                  results_path: str, aggregator: MacroAggregator):
         """Initialize the strategy with the given parameters."""
         self.asset = asset
         self.ticker = ticker
+        self.lookback_period = lookback_period
         self.model_aggregate = model_aggregate
         self.model_trading = model_trading
         self.dates = dates
         self.filter_agent = filter_agent
         self.chunk_size = chunk_size
         self.num_processes = num_processes
-        self.num_rounds = num_rounds
+        self.max_rounds = max_rounds
         self.trading_system_prompt = trading_system_prompt
         self.results_path = results_path
 
         self.aggregator = aggregator
 
-        self.name = ["RiskAverseAgent", "RiskSeekingAgent"]
-        self.logger_name = ["backtest", "backtest"]
-        self.style = ["Risk Averse", "Risk Seeking"]
-        self.risk_tolerance = ["low", "high"]
+        self.name = ["RiskAverseAgent", "RiskNeutralAgent", "RiskSeekingAgent"]
+        self.logger_name = ["backtest", "backtest", "backtest"]
+        self.style = ["Risk Averse", "Risk Neutral","Risk Seeking"]
+        self.risk_tolerance = ["low", "medium", "high"]
 
         # Decision making agent for trading
         self.network = MultiAgentNetwork(
@@ -204,11 +186,11 @@ class DebateDrivenStrategy:
         )
 
         # Set up logging
-        self.log = logger(name="NewsDrivenStrategy", log_file=f"Logs/backtest.log")
+        self.log = logger(name="DebateDrivenStrategy", log_file=f"Logs/backtest.log")
 
-    def single_day_backtest(self, date, aggregator, filter_agent, chunk_size, network):
+    def single_day_backtest(self, date, lookback_period, aggregator, filter_agent, chunk_size, network):
         """Run backtest for a single date."""
-        log = logger(name="NewsDrivenStrategy", log_file=f"Logs/backtest.log")
+        log = logger(name="DebateDrivenStrategy", log_file=f"Logs/backtest.log")
         results = []
         
         # Aggregate data for the current date
@@ -217,10 +199,12 @@ class DebateDrivenStrategy:
         # Measure aggregation time
         log.info(f"Aggregating data for {date.strftime('%Y-%m-%d')}...")
         aggregation_start_time = time.time()
-        
+        start_date = date - timedelta(days=lookback_period)
+        filter_dates = [start_date + timedelta(days=i) for i in range(lookback_period + 1)]
+
         aggregator.set_current_date(current_date=date)  # To filter only the current date
         input_prompt = aggregator.aggregate_all(
-            filter_dates=[date],
+            filter_dates=[filter_dates],
             filter_agent=filter_agent,
             chunk_size=chunk_size
         )
@@ -230,7 +214,7 @@ class DebateDrivenStrategy:
 
         # Get trading decision from the agent
         start_time = time.time()
-        final_opinions = network.get_trading_decision(input_prompt=input_prompt, num_rounds=self.num_rounds)
+        final_opinions = network.get_trading_decision(input_prompt=input_prompt, max_rounds=self.max_rounds)
 
         elapsed_time = time.time() - start_time
         log.info(f"Decision time: {elapsed_time:.2f} seconds for date: [{date}]")
@@ -251,13 +235,13 @@ class DebateDrivenStrategy:
         if self.num_processes == 1:
             # Serial processing
             for date in date_range:
-                day_results = self.single_day_backtest(date, self.aggregator, self.filter_agent, self.chunk_size, self.network)
+                day_results = self.single_day_backtest(date, self.lookback_period, self.aggregator, self.filter_agent, self.chunk_size, self.network)
                 results.append(day_results)
         else:
             # Parallel processing
             with multiprocessing.Pool(processes=self.num_processes) as pool:
                 results = pool.starmap(self.single_day_backtest, [
-                    (date, self.aggregator, self.filter_agent, self.chunk_size, self.agent) 
+                    (date, self.lookback_period, self.aggregator, self.filter_agent, self.chunk_size, self.agent) 
                     for date in date_range
                 ])
 
