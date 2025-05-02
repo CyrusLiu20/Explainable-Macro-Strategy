@@ -70,7 +70,7 @@ class BacktestConfigurationLoader(BaseConfigLoader):
     def __init__(self, config_path):
         """Derived class for openfoam-specific configurations."""
         super().__init__(config_path)
-        
+
         # Extract second level attributes
         self._extract_attributes(self.macro_news_aggregation)
         self._extract_attributes(self.backtest)

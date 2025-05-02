@@ -26,7 +26,7 @@ def main(multi_agent: bool, config_path: str):
     aggregator_kwargs = filter_valid_kwargs(MacroAggregator, backtest_config)
     aggregator = MacroAggregator(**aggregator_kwargs)
 
-    if not multi_agent:
+    if not backtest_config_loader.multi_agent:
       backtest_kwargs = filter_valid_kwargs(NewsDrivenStrategy, backtest_config)
       news_driven_strategy = NewsDrivenStrategy(aggregator=aggregator, **backtest_kwargs)
       backtest_results = news_driven_strategy.backtest()

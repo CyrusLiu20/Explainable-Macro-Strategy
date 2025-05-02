@@ -1,4 +1,5 @@
 # YAML 1.2
+# News Driven Strategy
 # Backtest Configuration File
 
 # Macro News Aggregation Parameters
@@ -13,13 +14,14 @@ macro_news_aggregation:
 backtest:
   asset:                                        "US 10-year Treasury bonds"    # Asset for backtesting
   ticker:                                       "IEF"                          # Ticker symbol of the asset
-  num_processes:                                30                              # Number of parallel processes to backtest (Parallel processing would lead to ugly logging)
+  num_processes:                                30                             # Number of parallel processes to backtest (Parallel processing would lead to ugly logging)
   lookback_period:                              3                              # Number of lookback days for macro news                                  
 
+  multi_agent:                                  False                          # Single Agent Approach
   model_aggregate:                              "deepseek-chat"                # LLM Model to be used in the backtest
   aggregate_system_prompt:                      False                          # Whether the Aggregate LLM model includes a system message
   model_trading:                                "deepseek-reasoner"            # LLM model to be used for trading decision
-  trading_system_prompt:                        True                            # Whether the Aggregate LLM model includes a system message
+  trading_system_prompt:                        True                           # Whether the Aggregate LLM model includes a system message
 
 # File Paths and Data Management
 file_paths:
