@@ -22,7 +22,8 @@ class TradingAgent(BaseAgent):
     def __init__(self, asset: str, ticker: str, name: str = "TradingAgent", 
                  logger_name: str ="TradingAgent", model: str = "deepseek-r1:1.5b", 
                  style: str = "risk_neutral", risk_tolerance: str = "medium",
-                 has_system_prompt: bool = False):
+                 has_system_prompt: bool = False,
+                 chat_history_path: str = "Results/chat_history.json"):
         """
         Subclass of LLMAgent for trading-specific functionality.
 
@@ -38,6 +39,7 @@ class TradingAgent(BaseAgent):
         self.style = style
         self.risk_tolerance = risk_tolerance
         self.has_system_prompt = has_system_prompt
+        self.chat_history_path = chat_history_path
 
         # Define Risk Tolerance and Style of the Trader
         self.STYLE_PROMPT = STYLE_PROMPT
@@ -57,8 +59,13 @@ class TradingAgent(BaseAgent):
         self.ARGUMENT_PROMPT = Collection(ARGUMENT_PROMPT, EXAMPLE_ARGUMENT_PROMPT)
         self.REFLECTION_PROMPT = Collection(FINAL_REFLECTION_PROMPT, EXAMPLE_FINAL_REFLECTION_PROMPT)
 
-        # Initialize the base class
-        super().__init__(name=name, logger_name=logger_name, model=model, system_prompt=system_prompt, has_system_prompt=self.has_system_prompt)
+        # Initialize the base agent class
+        super().__init__(name=name, 
+                         logger_name=logger_name, 
+                         model=model, 
+                         system_prompt=system_prompt, 
+                         has_system_prompt=self.has_system_prompt,
+                         chat_history_path=self.chat_history_path)
 
         self.log.info(f"Initialized TradingAgent for {self.asset} ({self.ticker}) with model {self.model}")
 

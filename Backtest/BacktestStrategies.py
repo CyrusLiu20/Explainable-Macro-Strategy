@@ -15,7 +15,7 @@ class NewsDrivenStrategy:
 
     def __init__(self, dates: list, filter_agent: bool, chunk_size: int, num_processes: int, asset: str, 
                  ticker: str, lookback_period: int, model_aggregate: str, model_trading: str, trading_system_prompt: bool, 
-                 results_path: str, aggregator: MacroAggregator):
+                 results_path: str, chat_history_path, aggregator: MacroAggregator):
         """Initialize the strategy with the given parameters."""
         self.asset = asset
         self.ticker = ticker
@@ -28,6 +28,7 @@ class NewsDrivenStrategy:
         self.num_processes = num_processes
         self.trading_system_prompt = trading_system_prompt
         self.results_path = results_path
+        self.chat_history_path = chat_history_path
 
         self.aggregator = aggregator
 
@@ -46,6 +47,7 @@ class NewsDrivenStrategy:
             style=self.style,
             risk_tolerance=self.risk_tolerance,
             has_system_prompt=self.trading_system_prompt,
+            chat_history_path=self.chat_history_path,
         )
 
         # Set up logging
@@ -78,7 +80,6 @@ class NewsDrivenStrategy:
         # Get trading decision from the agent
         start_time = time.time()
 
-        print(input_prompt)
         # prediction, explanation = "N/A", "N/A" # Debugging purposes
         prediction, explanation = agent.get_trading_decision(input_prompt)
         decision = sentiment_to_decision(prediction=prediction)
@@ -88,8 +89,9 @@ class NewsDrivenStrategy:
         log.info(f"Prediction: {prediction} | Trading decision {decision} for date: [{date}]")
         log.info(f"Decision time: {elapsed_time:.2f} seconds for date: [{date}]")
 
-        # Store results for the current date
+        # Store backtest results for the current date and chat_history
         results.append({"Date": date, "Agent": self.name, "Prediction": prediction, "Decision": decision, "Explanation": explanation})
+        agent.save_chat_history(date=date)
 
         return results
 
@@ -142,6 +144,9 @@ class NewsDrivenStrategy:
         else:
             df.to_csv(self.results_path, index=False)
             self.log.info(f"Results saved to {self.results_path}")
+
+
+
 
 
 
