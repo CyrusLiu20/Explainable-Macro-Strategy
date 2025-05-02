@@ -5,7 +5,20 @@ from scipy.stats import linregress
 
 class Stats():
 
-    def __init__(self):
+    def __init__(self, date, strategy_return, benchmark_return, position, name="Strategy"):
+
+        self.strategy_return = strategy_return
+        self.benchmark_return = benchmark_return
+        self.position = position
+        self.name = name
+
+        self.signal = pd.DataFrame({
+            'Strategy_Daily_Return': np.array(strategy_return),
+            'Benchmark_Daily_Return': np.array(benchmark_return),
+            'Position': np.array(position)
+        }, index=np.array(date))
+
+        self.benchmark = True
         self.trim = False
         self.trim_range = None
 
@@ -154,9 +167,9 @@ class Stats():
 
     def _compute_stats(self, returns, returns_benchmark=None, positions=None):
 
-        aligned = pd.DataFrame({'returns': returns, 'returns_benchmark': returns_benchmark}).dropna()
-        returns = aligned['returns']
-        returns_benchmark = aligned['returns_benchmark']
+        # aligned = pd.DataFrame({'returns': returns, 'returns_benchmark': returns_benchmark}).dropna()
+        # returns = aligned['returns']
+        # returns_benchmark = aligned['returns_benchmark']
 
         stats = {
             'CAGR': self.cagr(returns, periods=252),
@@ -188,7 +201,7 @@ class Stats():
         positions = self.signal['Position']
         returns, positions = self._trim_daterange(returns), self._trim_daterange(positions)
 
-        if self.data_benchmark is None:
+        if self.benchmark is None:
             strategy_stats = self._compute_stats(returns=returns, positions=positions)
         else:
             returns_benchmark = self.signal['Benchmark_Daily_Return']
@@ -204,7 +217,7 @@ class Stats():
                 return f'{value:.{precision}f}'.rjust(8)
 
         # If benchmark data is available, compute benchmark stats
-        if self.data_benchmark is not None:
+        if self.benchmark is not None:
             returns_benchmark = self.signal['Benchmark_Daily_Return']
             returns_benchmark = self._trim_daterange(returns_benchmark)
 
@@ -245,3 +258,22 @@ class Stats():
         if self.trim_range is not None:
             return series[(series.index >= self.trim_range[0]) & (series.index <= self.trim_range[1])]
         return series
+    
+
+# Example use case
+if __name__ == "__main__":
+
+    # Generate synthetic data
+    n_days = 100
+    dates = pd.date_range(start="2023-01-01", periods=n_days, freq="D")
+    benchmark_return = np.random.normal(loc=0.0005, scale=0.01, size=n_days)
+    strategy_return = benchmark_return + np.random.normal(loc=0.0002, scale=0.005, size=n_days)
+    positions = np.random.choice([-1, 0, 1], size=n_days)
+
+    stats = Stats(strategy_return=strategy_return, 
+                benchmark_return=benchmark_return, 
+                position=positions,
+                date=dates,
+                name="News Driven Strategy")
+
+    stats.display_stats()
