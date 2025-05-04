@@ -75,6 +75,7 @@ class BacktestConfigurationLoader(BaseConfigLoader):
         self._extract_attributes(self.macro_news_aggregation)
         self._extract_attributes(self.backtest)
         self._extract_attributes(self.file_paths)
+        self._extract_attributes(self.visualization)
 
         self.data_root = Path(self.data_root)
         self.results_path = Path(self.results_path)
