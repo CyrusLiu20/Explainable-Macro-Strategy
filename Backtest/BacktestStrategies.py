@@ -15,7 +15,7 @@ class NewsDrivenStrategy:
 
     def __init__(self, dates: list, filter_agent: bool, chunk_size: int, num_processes: int, asset: str, 
                  ticker: str, lookback_period: int, model_aggregate: str, model_trading: str, trading_system_prompt: bool, 
-                 results_path: str, chat_history_path, aggregator: MacroAggregator):
+                 results_path: str, chat_history_path: str, aggregator: MacroAggregator):
         """Initialize the strategy with the given parameters."""
         self.asset = asset
         self.ticker = ticker
@@ -101,6 +101,7 @@ class NewsDrivenStrategy:
         results = []
 
         date_range = pd.date_range(start=self.dates[0], end=self.dates[1])
+        date_range = date_range[~date_range.weekday.isin([5, 6])] # Decision affects next position
 
         self.log.info(f"Starting backtesting with {self.num_processes} processes and {self.lookback_period} lookback periods")
 
@@ -129,14 +130,21 @@ class NewsDrivenStrategy:
     # Concatenate new results to the old results csv (duplicate entries will be replaced)
     def save_results(self, df: pd.DataFrame):
         os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
-        
+
+        # Filter out rows where Prediction is "Error"
+        df = df[df["Prediction"] != "Error"]
+
+        if df.empty:
+            self.log.info("No valid results to save (all predictions were 'Error').")
+            return
+
         if os.path.exists(self.results_path) and os.path.getsize(self.results_path) > 0:
             existing_df = pd.read_csv(self.results_path)
-            
-            # Ensure 'Date' is of type datetime in both DataFrames
-            existing_df['Date'] = pd.to_datetime(existing_df['Date'])
-            df['Date'] = pd.to_datetime(df['Date'])
-            
+
+            # Ensure 'Date' is of type datetime in both DataFrames using .loc to avoid SettingWithCopyWarning
+            existing_df.loc[:, 'Date'] = pd.to_datetime(existing_df['Date'])
+            df.loc[:, 'Date'] = pd.to_datetime(df['Date'])
+
             merged_df = pd.concat([existing_df, df]).drop_duplicates(subset=["Date"], keep="last")
             merged_df = merged_df.sort_values(by="Date")
             merged_df.to_csv(self.results_path, index=False)
@@ -154,15 +162,16 @@ class NewsDrivenStrategy:
 class DebateDrivenStrategy:
 
     def __init__(self, dates: list, filter_agent: bool, chunk_size: int, num_processes: int, 
-                 max_rounds: int, asset: str, lookback_period: int,
+                 max_rounds: int, asset: str, lookback_period: int, verbose_debate: bool,
                  ticker: str, model_aggregate: str, model_trading: str, trading_system_prompt: bool, 
-                 results_path: str, aggregator: MacroAggregator):
+                 results_path: str, chat_history_path: str, aggregator: MacroAggregator):
         """Initialize the strategy with the given parameters."""
         self.asset = asset
         self.ticker = ticker
         self.lookback_period = lookback_period
         self.model_aggregate = model_aggregate
         self.model_trading = model_trading
+        self.verbose_debate = verbose_debate
         self.dates = dates
         self.filter_agent = filter_agent
         self.chunk_size = chunk_size
@@ -170,6 +179,8 @@ class DebateDrivenStrategy:
         self.max_rounds = max_rounds
         self.trading_system_prompt = trading_system_prompt
         self.results_path = results_path
+        self.chat_history_path=chat_history_path
+
 
         self.aggregator = aggregator
 
@@ -188,6 +199,8 @@ class DebateDrivenStrategy:
             style=self.style,
             risk_tolerance=self.risk_tolerance,
             has_system_prompt=self.trading_system_prompt,
+            chat_history_path=self.chat_history_path,
+            verbose_debate=self.verbose_debate,
         )
 
         # Set up logging
@@ -225,7 +238,7 @@ class DebateDrivenStrategy:
         log.info(f"Decision time: {elapsed_time:.2f} seconds for date: [{date}]")
 
         results = self._extract_final_opinions(date=date, final_opinions=final_opinions, log=log)
-
+        network.save_chat_history(date=date)
         return results
 
     def backtest(self):
@@ -234,8 +247,9 @@ class DebateDrivenStrategy:
         results = []
 
         date_range = pd.date_range(start=self.dates[0], end=self.dates[1])
+        date_range = date_range[~date_range.weekday.isin([4, 5])] # Decision affects next position
 
-        self.log.info(f"Starting backtesting with {self.num_processes} processes")
+        self.log.info(f"Starting backtesting with {self.num_processes} processes, {self.lookback_period} lookback periods and verbose_debate={self.verbose_debate}")
 
         if self.num_processes == 1:
             # Serial processing
@@ -246,7 +260,7 @@ class DebateDrivenStrategy:
             # Parallel processing
             with multiprocessing.Pool(processes=self.num_processes) as pool:
                 results = pool.starmap(self.single_day_backtest, [
-                    (date, self.lookback_period, self.aggregator, self.filter_agent, self.chunk_size, self.agent) 
+                    (date, self.lookback_period, self.aggregator, self.filter_agent, self.chunk_size, self.network) 
                     for date in date_range
                 ])
 
@@ -261,6 +275,7 @@ class DebateDrivenStrategy:
     def _extract_final_opinions(self, date, final_opinions: dict, log: logger):
 
         results = []
+        log_message = f"[Date: {date}]"
         # Save the final opinions for each agent
         for agent_name, opinion in final_opinions.items():
             prediction = opinion['prediction']
@@ -268,7 +283,8 @@ class DebateDrivenStrategy:
             decision = sentiment_to_decision(prediction=prediction)
 
             # Log the final opinion of the agent
-            log.info(f"Agent: {agent_name} | Prediction: {prediction} | Explanation: {explanation}")
+            # if self.verbose_debate:
+            # log_message += f"Agent: {agent_name} | Prediction: {prediction}\n"
 
             # Store the results for the current date
             results.append({
@@ -279,12 +295,18 @@ class DebateDrivenStrategy:
                 "Explanation": explanation,
             })    
 
+        # if self.verbose_debate and log_message:
+        # self.log.info(log_message)
+
         return results
     
     # Concatenate new results to the old results csv (duplicate entries will be replaced)
     def save_results(self, df: pd.DataFrame):
         os.makedirs(os.path.dirname(self.results_path), exist_ok=True)
         
+        # Filter out rows where Prediction is "Error"
+        df = df[df["Prediction"] != "Error"]
+
         if os.path.exists(self.results_path) and os.path.getsize(self.results_path) > 0:
             existing_df = pd.read_csv(self.results_path)
             

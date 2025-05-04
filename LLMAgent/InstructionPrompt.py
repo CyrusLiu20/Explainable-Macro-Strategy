@@ -117,23 +117,22 @@ EXAMPLE_SUMMARY_PROMPT = NamedBlock(
 )
 
 ARGUMENT_PROMPT = NamedBlock(
-    name="Debate Response to Other Agent",
+    name="Debate Response to All Other Agents",
     content=textwrap.dedent("""
     You are a {style} trader with {risk_tolerance} risk tolerance.
     
-    Another agent named {other_agent_name} made a prediction:
-    "{other_prediction}"
-    
-    Their explanation:
-    "{other_explanation}"
+    The following agents have made predictions about the market, along with their explanations:
 
-    Based on your trading philosophy, critically assess their prediction and explanation. If you disagree, aim to **persuade** them by challenging their assumptions or logic. 
-    If you find their reasoning convincing, acknowledge it and consider updating your stance.
+    {other_opinions_block}
+
+    Based on your trading philosophy, critically assess the above predictions and explanations. 
+    If you disagree, aim to **persuade** others by challenging their assumptions or logic. 
+    If you find some arguments convincing, acknowledge them and consider **updating your stance**.
 
     **Note**: The goal is for all agents to eventually **agree on a unified market view**. 
     The discussion ends only when unanimous agreement is reached.
 
-    You may reference previous rounds or highlight contradictions.
+    You may reference contradictions, commonalities, or previous rounds of discussion.
 
     Please follow the format below:
     """)
@@ -144,10 +143,20 @@ EXAMPLE_ARGUMENT_PROMPT = NamedBlock(
     name="Expected Response Output Format",
     content=textwrap.dedent("""
     ```
-    Agreement: [Strongly Agree / Agree / Neutral / Disagree / Strongly Disagree]
+    Agreement: [Agreement]
     Response: [Explain why you agree or disagree with the other agent's view.]
                             
-    Prediction: [Revised Prediction]
+    Prediction: [Prediction]
+                            
+    Only choose one of the following prediction options:
+    - Strongly Bullish
+    - Bullish
+    - Slightly Bullish
+    - Flat
+    - Fluctuating
+    - Slightly Bearish
+    - Bearish
+    - Strongly Bearish
     ```
     """)
 )

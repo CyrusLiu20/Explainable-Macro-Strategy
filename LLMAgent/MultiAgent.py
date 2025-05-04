@@ -18,8 +18,8 @@ from LLMAgent.MacroAgent import TradingAgent
 lock = Lock()
 
 class MultiAgentNetwork():
-    def __init__(self, asset: str, ticker: str, name: list, logger_name: list, model: list, 
-                 style: list, risk_tolerance: list, has_system_prompt: list):
+    def __init__(self, asset: str, ticker: str, name: list, logger_name: list, model: list, verbose_debate: bool,
+                 style: list, risk_tolerance: list, has_system_prompt: list, chat_history_path: str):
         """
         A network managing multiple TradingAgents.
 
@@ -39,6 +39,9 @@ class MultiAgentNetwork():
         self.style = style
         self.risk_tolerance = risk_tolerance
         self.has_system_prompt = has_system_prompt
+        self.chat_history_path=chat_history_path
+
+        self.verbose_debate = verbose_debate
 
         # Initialize a list of trading agents
         self.trading_agents = []
@@ -51,7 +54,8 @@ class MultiAgentNetwork():
                 model=self.model[i],
                 style=self.style[i],
                 risk_tolerance=self.risk_tolerance[i],
-                has_system_prompt=self.has_system_prompt[i]
+                has_system_prompt=self.has_system_prompt[i],
+                chat_history_path=self.chat_history_path,
             )
             self.trading_agents.append(agent)
 
@@ -74,7 +78,7 @@ class MultiAgentNetwork():
         # Step 3: Agents reflect and update final opinions
         final_opinions = self.reflection_phase()
 
-        self.log.info(final_opinions)
+        # self.log.info(final_opinions)
         return final_opinions
 
     def constructive_speech(self, input_prompt: str):
@@ -82,7 +86,8 @@ class MultiAgentNetwork():
         Agents form initial opinions based on the input prompt.
         """
         agent_opinions = {}
-        print("\n[Step 1] Agents form initial opinions:\n")
+        if self.verbose_debate:
+            print("\n[Step 1] Agents form initial opinions:\n")
 
         def get_opinion(agent):
             prediction, explanation = agent.get_trading_decision(input_prompt)
@@ -97,56 +102,59 @@ class MultiAgentNetwork():
                     "prediction": prediction,
                     "explanation": explanation
                 }
-                print(f"{agent_name} predicts: {prediction}")
-                print(f"Explanation: {explanation}\n")
+                if self.verbose_debate:
+                    print(f"{agent_name} predicts: {prediction}")
+                    print(f"Explanation: {explanation}\n")
 
         return agent_opinions
 
     def cross_examination(self, agent_opinions, max_rounds: int):
         """
-        Agents communicate in rounds where they argue and discuss each other's opinions
-        until they all reach the same decision, or the maximum number of rounds is reached.
+        Agents communicate in rounds where they argue and discuss all other agents' opinions
+        collectively, until they all reach the same decision or the maximum number of rounds is reached.
         """
-        print("\n[Step 2] Agents start discussion rounds:\n")
+        if self.verbose_debate:
+            print("\n[Step 2] Agents start discussion rounds:\n")
 
         for round_num in range(max_rounds):
-            print(f"\n--- Round {round_num + 1} ---\n")
+            if self.verbose_debate:
+                print(f"\n--- Round {round_num + 1} ---\n")
 
             new_opinions = {}
             decisions = {}
 
             def process_agent(agent):
-                outputs = [f"\n{agent.name} is responding to other agents...\n"]
+                outputs = [f"\n{agent.name} is responding to all other agents...\n"]
                 agent_prediction = None
                 agent_explanation = None
                 agent_decision = None
 
-                for other_agent_name, other_opinion in agent_opinions.items():
-                    if other_agent_name == agent.name:
-                        continue  # Skip self
+                # Aggregate all other agents' predictions and explanations
+                other_views = []
+                for other_name, opinion in agent_opinions.items():
+                    if other_name != agent.name:
+                        other_views.append({
+                            "name": other_name,
+                            "prediction": opinion["prediction"],
+                            "explanation": opinion["explanation"]
+                        })
 
-                    outputs.append(f"  Responding to {other_agent_name}'s view:")
-                    outputs.append(f"    - Prediction: {other_opinion['prediction']}")
-                    outputs.append(f"    - Explanation: {other_opinion['explanation']}")
+                # # Call agent's reasoning method with all other opinions at once
+                # with lock:
+                agreement, response, prediction = agent.argue(
+                    other_opinions=other_views
+                )
 
-                    with lock:
-                        agreement, response, prediction = agent.argue(
-                            other_agent_name=other_agent_name,
-                            other_prediction=other_opinion["prediction"],
-                            other_explanation=other_opinion["explanation"]
-                        )
+                agent_prediction = prediction
+                agent_explanation = response
+                agent_decision = sentiment_to_decision(prediction)
 
-                    agent_prediction = prediction
-                    agent_explanation = response
-                    agent_decision = sentiment_to_decision(prediction)
+                outputs.append(f"[{agent.name}]  Agreement: {agreement}")
+                outputs.append(f"Response: {response}")
+                outputs.append(f"Prediction: {prediction}")
+                outputs.append(f"Decision: {agent_decision} \n")
 
-                    outputs.append(
-                        f"[{agent.name}]  Agreement: {agreement} | "
-                        f"Response: {response} | Prediction: {prediction} | "
-                        f"Decision: {agent_decision} \n"
-                    )
-
-                # Store final values for this agent
+                # Store updated opinions and decisions
                 new_opinions[agent.name] = {
                     "prediction": agent_prediction,
                     "explanation": agent_explanation
@@ -159,30 +167,36 @@ class MultiAgentNetwork():
                 futures = [executor.submit(process_agent, agent) for agent in self.trading_agents]
 
                 for future in as_completed(futures):
-                    print(future.result())
+                    if self.verbose_debate:
+                        print(future.result())
 
-            # Check for consensus in decision
+            # Check for consensus
             all_decisions = list(decisions.values())
             if len(set(all_decisions)) == 1:
-                print(f"\nAll agents have reached consensus decision: '{all_decisions[0]}'\n")
+                if self.verbose_debate:
+                    print(f"\nAll agents have reached consensus decision: '{all_decisions[0]}'\n")
                 break
             else:
-                print(f"\nNo consensus on decision yet. Continuing to next round...\n")
+                if self.verbose_debate:
+                    print("\nNo consensus on decision yet. Continuing to next round...\n")
 
-            agent_opinions = new_opinions  # Update opinions for next round
+            agent_opinions = new_opinions  # Update for next round
         else:
-            print("\nMaximum rounds reached. No consensus on decision.\n")
+            if self.verbose_debate:
+                print("\nMaximum rounds reached. No consensus on decision.\n")
 
 
     def reflection_phase(self):
         """
         After the discussion rounds, each agent reflects and provides a final prediction and explanation.
         """
-        print("\n[Step 3] Agents reflect and update their final views:\n")
+        if self.verbose_debate:
+            print("\n[Step 3] Agents reflect and update their final views:\n")
         final_opinions = {}
 
         def agent_reflect(agent):
-            print(f"{agent.name} is reflecting on the discussion...")
+            if self.verbose_debate:
+                print(f"{agent.name} is reflecting on the discussion...")
             final_prediction, final_explanation = agent.reflection()
             return agent.name, final_prediction, final_explanation
 
@@ -195,8 +209,14 @@ class MultiAgentNetwork():
                     "prediction": final_prediction,
                     "explanation": final_explanation
                 }
-
-                print(f"{agent_name}'s Final Prediction: {final_prediction}")
-                print(f"{agent_name}'s Final Explanation: {final_explanation}\n")
+                if self.verbose_debate:
+                    print(f"{agent_name}'s Final Prediction: {final_prediction}")
+                    print(f"{agent_name}'s Final Explanation: {final_explanation}\n")
 
         return final_opinions
+    
+
+    # Save chat history for all agents
+    def save_chat_history(self, date):
+        for agent in self.trading_agents:
+            agent.save_chat_history(date=date)

@@ -64,6 +64,7 @@ class BaseAgent:
             "model": self.model,
             "messages": messages,
             "temperature": 0.7,
+            "use_web_search": False, # Prevents data leakage
         }
 
         self.log.info(f"Sending request to {self.name}...")
@@ -104,6 +105,13 @@ class BaseAgent:
 
     # Appends this agent's chat history to its file without overwriting existing data.
     def save_chat_history(self, date: str):
+
+        # Create a new directory based on the date
+        date = date.strftime("%Y-%m-%d")
+        base_filename = os.path.basename(self.chat_history_path)
+        directory_path = os.path.dirname(self.chat_history_path)
+        new_directory_path = os.path.join(directory_path, date) 
+        self.chat_history_path = os.path.join(new_directory_path, base_filename)
         os.makedirs(os.path.dirname(self.chat_history_path), exist_ok=True)
 
         # Load existing chat history file or create an empty structure
@@ -114,7 +122,6 @@ class BaseAgent:
             existing_history = {}
 
         # Check if the date exists, then check agent's history for that date
-        date = date.strftime("%Y-%m-%d")
         if date in existing_history:
             existing_history[date][self.name] = self.chat_history
         else:

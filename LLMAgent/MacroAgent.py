@@ -92,14 +92,19 @@ class TradingAgent(BaseAgent):
 
         return extracted_response["prediction"], extracted_response["explanation"]
 
-    def argue(self, other_agent_name, other_prediction, other_explanation):
+    def argue(self, other_opinions):
 
-        arguments = {"other_agent_name": other_agent_name,
-                     "other_prediction": other_prediction, 
-                     "other_explanation": other_explanation,
-                     "risk_tolerance": self.risk_tolerance,
-                     "style": self.style,}
-        
+        other_opinions_block = "\n\n".join([
+                f"Agent {o['name']} predicted: \"{o['prediction']}\"\nExplanation: \"{o['explanation']}\""
+                for o in other_opinions
+            ])
+
+        arguments = {
+            "other_opinions_block": other_opinions_block,
+            "risk_tolerance": self.risk_tolerance,
+            "style": self.style,
+        }
+
         argument_prompt = format_prompt(self.ARGUMENT_PROMPT,arguments)
 
         # Get raw response from the base class
