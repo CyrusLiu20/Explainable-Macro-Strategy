@@ -14,7 +14,7 @@ macro_news_aggregation:
 backtest:
   asset:                                        "US 10-year Treasury bonds"    # Asset for backtesting
   ticker:                                       "IEF"                          # Ticker symbol of the asset
-  num_processes:                                20                             # Number of parallel processes to backtest (Parallel processing would lead to ugly logging)
+  num_processes:                                10                             # Number of parallel processes to backtest (Parallel processing would lead to ugly logging)
   lookback_period:                              3                              # Number of lookback days for macro news                                  
   max_rounds:                                   2                              # Number of rounds of discussion
   verbose_debate:                               False                          # verbose_debate=True should be used for debugging purposes only

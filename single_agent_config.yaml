@@ -50,3 +50,20 @@ last_periods_list:
   - 6     # Number of periods for monthly data
   - 4     # Number of periods for quarterly data
 
+
+# Visualization
+visualization:
+
+  start_date:                                 *start_date
+  end_date:                                   *end_date
+  leverage:                                   2                                                                   # Multiplier to strategy decision
+
+  results_folder_path:                        "Results"                                                           # Path for the results folder
+  price_data_path:                            "DataPipeline/Data/Benchmark/IEF_price_data.csv"
+  backtest_results:
+    - "single_agent_backtest_results.csv"
+    - "multi_agent_backtest_results.csv"
+
+  backtest_names:
+    - "News Driven Strategy"
+    - "Debate Driven Strategy"

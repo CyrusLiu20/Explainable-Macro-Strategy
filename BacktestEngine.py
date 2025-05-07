@@ -27,12 +27,12 @@ def main(multi_agent: bool, config_path: str):
     aggregator = MacroAggregator(**aggregator_kwargs)
 
     if not backtest_config_loader.multi_agent:
-      backtest_kwargs = filter_valid_kwargs(NewsDrivenStrategy, backtest_config)
-      news_driven_strategy = NewsDrivenStrategy(aggregator=aggregator, **backtest_kwargs)
+      strategy_kwargs = filter_valid_kwargs(NewsDrivenStrategy, backtest_config)
+      news_driven_strategy = NewsDrivenStrategy(aggregator=aggregator, **strategy_kwargs)
       backtest_results = news_driven_strategy.backtest()
     else:
-      backtest_kwargs = filter_valid_kwargs(DebateDrivenStrategy, backtest_config)
-      debate_driven_strategy = DebateDrivenStrategy(aggregator=aggregator, **backtest_kwargs)
+      strategy_kwargs = filter_valid_kwargs(DebateDrivenStrategy, backtest_config)
+      debate_driven_strategy = DebateDrivenStrategy(aggregator=aggregator, **strategy_kwargs)
       backtest_results = debate_driven_strategy.backtest()
     ##################################### Strategy Backtest #####################################
 
